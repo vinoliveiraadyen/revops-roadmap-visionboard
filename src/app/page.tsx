@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { getOptimalSequence } from "@/app/actions";
-import { Lightbulb, Loader2 } from "lucide-react";
+import { Lightbulb, Loader2, Upload } from "lucide-react";
 import { format } from "date-fns";
+import { ImportCsvDialog } from "@/components/import-csv-dialog";
 
 const initialProjects: Project[] = [
     { id: 'proj-1', name: 'Initial Planning & Research', epicNumber: 'EPIC-001', team: 'Strategy', startDate: '2024-01-15', endDate: '2024-02-28', resources: 'PM, UX Researcher', dependencies: 'None' },
@@ -39,6 +40,10 @@ export default function Home() {
       dependencies: data.dependencies || "None",
     };
     setProjects(prev => [...prev, newProject]);
+  };
+  
+  const handleCsvImport = (newProjects: Project[]) => {
+      setProjects(prev => [...prev, ...newProjects]);
   };
 
   const handleOptimize = () => {
@@ -100,7 +105,10 @@ export default function Home() {
                 />
             </div>
             <div className="flex flex-col gap-4 w-full md:w-auto pt-0 md:pt-8">
-                <AddProjectDialog onProjectAdd={handleProjectAdd} />
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <AddProjectDialog onProjectAdd={handleProjectAdd} />
+                  <ImportCsvDialog onProjectsAdd={handleCsvImport} />
+                </div>
                 <Button onClick={handleOptimize} disabled={isPending} className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
                 {isPending ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
