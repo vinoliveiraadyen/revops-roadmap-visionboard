@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import { ImportCsvDialog } from "@/components/import-csv-dialog";
 import { MultiSelectFilter } from "@/components/multi-select-filter";
 import { Separator } from "@/components/ui/separator";
+import { ResourceLoadChart } from "@/components/resource-load-chart";
 
 const initialProjects: Project[] = [
     { id: 'proj-1', name: 'Initial Planning & Research', epicNumber: 'EPIC-001', team: 'Strategy', startDate: '2024-01-15', endDate: '2024-02-28', resources: 'PM, UX Researcher', dependencies: 'None' },
@@ -244,6 +245,10 @@ export default function Home() {
         </div>
         
         <Timeline projects={filteredProjects} onProjectDelete={handleProjectDelete} onProjectEdit={handleProjectEdit} />
+
+        <div className="mt-8">
+          <ResourceLoadChart projects={filteredProjects} />
+        </div>
 
       </main>
       <footer className="text-center mt-12 text-muted-foreground text-sm">
