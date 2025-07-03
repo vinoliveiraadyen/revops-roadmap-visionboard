@@ -244,7 +244,7 @@ export function Timeline({ projects, onProjectDelete, onProjectEdit }: { project
         </div>
 
         {/* Projects */}
-        <div className="relative pt-12 h-full">
+        <div className="relative pt-16 h-full">
           {projects.map((project) => (
             <TimelineProject key={project.id} project={project} year={displayYear} rowIndex={projectRowMap.get(project.id) || 0} onDelete={onProjectDelete} onEdit={onProjectEdit} />
           ))}
