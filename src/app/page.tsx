@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { getOptimalSequence } from "@/app/actions";
 import { Lightbulb, Loader2, Upload, Plus } from "lucide-react";
-import { format } from "date-fns";
+import { format, parseISO, differenceInDays, addDays } from "date-fns";
 import { ImportCsvDialog } from "@/components/import-csv-dialog";
 import { MultiSelectFilter } from "@/components/multi-select-filter";
 import { Separator } from "@/components/ui/separator";
@@ -108,6 +108,38 @@ export default function Home() {
   const handleProjectEdit = (project: Project) => {
     setProjectToEdit(project);
     setIsEditDialogOpen(true);
+  };
+  
+  const handleProjectMove = (projectId: string, newStartDate: Date) => {
+    setProjects(prevProjects => {
+        const projectToMove = prevProjects.find(p => p.id === projectId);
+        if (!projectToMove) return prevProjects;
+
+        try {
+            const originalStart = parseISO(projectToMove.startDate);
+            const originalEnd = parseISO(projectToMove.endDate);
+            const duration = differenceInDays(originalEnd, originalStart);
+
+            const newEndDate = addDays(newStartDate, duration);
+
+            return prevProjects.map(p => 
+                p.id === projectId 
+                ? { 
+                    ...p, 
+                    startDate: format(newStartDate, "yyyy-MM-dd"),
+                    endDate: format(newEndDate, "yyyy-MM-dd")
+                  } 
+                : p
+            );
+        } catch (e) {
+            console.error("Error calculating new project dates:", e);
+            return prevProjects; // Return original state on error
+        }
+    });
+    toast({
+        title: "Project Rescheduled",
+        description: "The project's dates have been updated on the timeline."
+    });
   };
 
   const handleOptimize = () => {
@@ -244,7 +276,7 @@ export default function Home() {
           </div>
         </div>
         
-        <Timeline projects={filteredProjects} onProjectDelete={handleProjectDelete} onProjectEdit={handleProjectEdit} />
+        <Timeline projects={filteredProjects} onProjectDelete={handleProjectDelete} onProjectEdit={handleProjectEdit} onProjectMove={handleProjectMove} />
 
         <div className="mt-8">
           <ResourceLoadChart projects={filteredProjects} />

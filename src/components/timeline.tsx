@@ -9,6 +9,7 @@ import {
   parseISO,
   format,
   getYear,
+  addDays,
 } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -79,11 +80,26 @@ const TimelineProject = ({ project, year, rowIndex, onDelete, onEdit }: { projec
   const width = (clampedDuration / totalDays) * 100;
   const teamColor = getTeamColor(project.team);
 
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    e.dataTransfer.setData("projectId", project.id);
+    
+    // Store mouse offset relative to the element start
+    const rect = e.currentTarget.getBoundingClientRect();
+    const offset = e.clientX - rect.left;
+    e.dataTransfer.setData("dragOffset", offset.toString());
+
+    // Store original duration
+    const originalDuration = differenceInDays(projectEnd, projectStart);
+    e.dataTransfer.setData("duration", originalDuration.toString());
+  };
+
   return (
     <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
       <PopoverTrigger asChild>
         <div
-          className="absolute h-12 bg-card rounded-md flex flex-col justify-center px-3 text-card-foreground hover:bg-muted transition-colors cursor-pointer shadow-sm border-l-4 overflow-hidden"
+          draggable
+          onDragStart={handleDragStart}
+          className="absolute h-12 bg-card rounded-md flex flex-col justify-center px-3 text-card-foreground hover:bg-muted transition-colors cursor-grab active:cursor-grabbing shadow-sm border-l-4 overflow-hidden"
           style={{
             left: `${left}%`,
             width: `${width}%`,
@@ -209,7 +225,7 @@ const getProjectRows = (projects: Project[], year: number) => {
     return {projectRowMap, rowCount: rows.length};
 }
 
-export function Timeline({ projects, onProjectDelete, onProjectEdit }: { projects: Project[]; onProjectDelete: (projectId: string) => void; onProjectEdit: (project: Project) => void; }) {
+export function Timeline({ projects, onProjectDelete, onProjectEdit, onProjectMove }: { projects: Project[]; onProjectDelete: (projectId: string) => void; onProjectEdit: (project: Project) => void; onProjectMove: (projectId: string, newStartDate: Date) => void; }) {
   const allYears = Array.from(new Set(projects.flatMap(p => {
     try {
       return [getYear(parseISO(p.startDate)), getYear(parseISO(p.endDate))];
@@ -223,8 +239,34 @@ export function Timeline({ projects, onProjectDelete, onProjectEdit }: { project
   const { projectRowMap, rowCount } = getProjectRows(projects, displayYear);
   const timelineHeight = (rowCount * 3.5) + 9.5; // 3.5rem per row + padding
 
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const projectId = e.dataTransfer.getData("projectId");
+    const offset = parseFloat(e.dataTransfer.getData("dragOffset") || "0");
+    const duration = parseInt(e.dataTransfer.getData("duration") || "0", 10);
+    if (!projectId) return;
+
+    const timelineRect = e.currentTarget.getBoundingClientRect();
+    const totalDays = getDaysInYear(new Date(displayYear, 0, 1));
+
+    const projectWidthInPixels = (duration / totalDays) * timelineRect.width;
+    let startX = e.clientX - timelineRect.left - offset;
+    // Clamp the position to stay within the timeline
+    startX = Math.max(0, Math.min(timelineRect.width - projectWidthInPixels, startX));
+
+    const dayOfYear = Math.round((startX / timelineRect.width) * totalDays);
+    
+    const newStartDate = addDays(startOfYear(new Date(displayYear, 0, 1)), dayOfYear);
+
+    onProjectMove(projectId, newStartDate);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+
   return (
-    <div className="bg-card/50 rounded-lg p-4 relative" style={{ minHeight: `${timelineHeight}rem` }}>
+    <div className="bg-card/50 rounded-lg p-4 relative" style={{ minHeight: `${timelineHeight}rem` }} onDrop={handleDrop} onDragOver={handleDragOver}>
       <div className="relative h-full">
         {/* Month Markers */}
         <div className="grid grid-cols-12 h-full absolute inset-0">
