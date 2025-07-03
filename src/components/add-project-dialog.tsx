@@ -1,10 +1,11 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { format } from "date-fns";
-import { Calendar as CalendarIcon, Plus } from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -29,7 +30,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import type { Project } from "@/lib/types";
 
 const projectSchema = z.object({
   name: z.string().min(1, "Project name is required"),
@@ -43,16 +45,28 @@ const projectSchema = z.object({
 
 export type ProjectFormValues = z.infer<typeof projectSchema>;
 
-interface AddProjectDialogProps {
-  onProjectAdd: (project: ProjectFormValues) => void;
+interface ProjectDialogProps {
+  onSave: (data: ProjectFormValues, projectId?: string) => void;
+  projectToEdit?: Project | null;
+  children: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function AddProjectDialog({ onProjectAdd }: AddProjectDialogProps) {
-  const [open, setOpen] = useState(false);
+export function AddProjectDialog({ onSave, projectToEdit, children, open, onOpenChange }: ProjectDialogProps) {
+  const isEditMode = !!projectToEdit;
 
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = open ?? internalOpen;
+  const setIsOpen = onOpenChange ?? setInternalOpen;
+  
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectSchema),
-    defaultValues: {
+    defaultValues: isEditMode && projectToEdit ? {
+      ...projectToEdit,
+      startDate: parseISO(projectToEdit.startDate),
+      endDate: parseISO(projectToEdit.endDate),
+    } : {
       name: "",
       epicNumber: "",
       team: "",
@@ -61,24 +75,41 @@ export function AddProjectDialog({ onProjectAdd }: AddProjectDialogProps) {
     },
   });
 
+  useEffect(() => {
+    if (isOpen) {
+      if (isEditMode && projectToEdit) {
+        form.reset({
+          ...projectToEdit,
+          startDate: parseISO(projectToEdit.startDate),
+          endDate: parseISO(projectToEdit.endDate),
+        });
+      } else {
+        form.reset({
+          name: "",
+          epicNumber: "",
+          team: "",
+          resources: "",
+          dependencies: "",
+          startDate: undefined,
+          endDate: undefined,
+        });
+      }
+    }
+  }, [isOpen, projectToEdit, isEditMode, form]);
+
   function onSubmit(data: ProjectFormValues) {
-    onProjectAdd(data);
-    form.reset();
-    setOpen(false);
+    onSave(data, projectToEdit?.id);
+    setIsOpen(false);
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" /> Add Project
-        </Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px] md:max-w-lg bg-card">
         <DialogHeader>
-          <DialogTitle className="font-headline">Create New Project</DialogTitle>
+          <DialogTitle className="font-headline">{isEditMode ? 'Edit Project' : 'Create New Project'}</DialogTitle>
           <DialogDescription>
-            Fill in the details for your new project. Click create when you're done.
+            {isEditMode ? "Update the project details below." : "Fill in the details for your new project. Click create when you're done."}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -234,7 +265,7 @@ export function AddProjectDialog({ onProjectAdd }: AddProjectDialogProps) {
               <DialogClose asChild>
                 <Button type="button" variant="secondary">Cancel</Button>
               </DialogClose>
-              <Button type="submit">Create Project</Button>
+              <Button type="submit">{isEditMode ? 'Save Changes' : 'Create Project'}</Button>
             </DialogFooter>
           </form>
         </Form>

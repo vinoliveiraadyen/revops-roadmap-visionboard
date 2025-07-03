@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useTransition, useMemo } from "react";
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { getOptimalSequence } from "@/app/actions";
-import { Lightbulb, Loader2, Upload } from "lucide-react";
+import { Lightbulb, Loader2, Upload, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { ImportCsvDialog } from "@/components/import-csv-dialog";
 import { MultiSelectFilter } from "@/components/multi-select-filter";
@@ -32,6 +33,9 @@ export default function Home() {
 
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const [selectedResources, setSelectedResources] = useState<string[]>([]);
+  
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
 
   const allTeams = useMemo(() => [...new Set(projects.map(p => p.team))].sort(), [projects]);
   const allResources = useMemo(() => {
@@ -60,18 +64,32 @@ export default function Home() {
     });
   }, [projects, selectedTeams, selectedResources, hasActiveFilters]);
 
-  const handleProjectAdd = (data: ProjectFormValues) => {
-    const newProject: Project = {
-      id: `proj-${Date.now()}`,
-      name: data.name,
-      epicNumber: data.epicNumber,
-      team: data.team,
-      resources: data.resources,
-      startDate: format(data.startDate, "yyyy-MM-dd"),
-      endDate: format(data.endDate, "yyyy-MM-dd"),
-      dependencies: data.dependencies || "None",
-    };
-    setProjects(prev => [...prev, newProject]);
+  const handleProjectSave = (data: ProjectFormValues, projectId?: string) => {
+    if (projectId) {
+      // Update existing project
+      setProjects(prev => prev.map(p => p.id === projectId ? {
+        ...p,
+        ...data,
+        startDate: format(data.startDate, "yyyy-MM-dd"),
+        endDate: format(data.endDate, "yyyy-MM-dd"),
+        dependencies: data.dependencies || "None",
+      } : p));
+      toast({ title: "Project Updated", description: `"${data.name}" has been successfully updated.` });
+    } else {
+      // Add new project
+      const newProject: Project = {
+        id: `proj-${Date.now()}`,
+        name: data.name,
+        epicNumber: data.epicNumber,
+        team: data.team,
+        resources: data.resources,
+        startDate: format(data.startDate, "yyyy-MM-dd"),
+        endDate: format(data.endDate, "yyyy-MM-dd"),
+        dependencies: data.dependencies || "None",
+      };
+      setProjects(prev => [...prev, newProject]);
+      toast({ title: "Project Added", description: `"${data.name}" has been successfully created.` });
+    }
   };
   
   const handleCsvImport = (newProjects: Project[]) => {
@@ -84,6 +102,11 @@ export default function Home() {
       title: "Project Deleted",
       description: "The project has been successfully removed.",
     });
+  };
+  
+  const handleProjectEdit = (project: Project) => {
+    setProjectToEdit(project);
+    setIsEditDialogOpen(true);
   };
 
   const handleOptimize = () => {
@@ -147,6 +170,17 @@ export default function Home() {
           Visualize your project roadmap and optimize with AI.
         </p>
       </header>
+      
+      {/* Edit Project Dialog - controlled, no visible trigger */}
+      <AddProjectDialog
+          onSave={handleProjectSave}
+          projectToEdit={projectToEdit}
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+      >
+          <span />
+      </AddProjectDialog>
+
 
       <main>
         <div className="bg-card p-6 rounded-lg shadow-sm mb-8">
@@ -162,7 +196,11 @@ export default function Home() {
             </div>
             <div className="flex flex-col gap-4 w-full md:w-auto pt-0 md:pt-8">
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <AddProjectDialog onProjectAdd={handleProjectAdd} />
+                  <AddProjectDialog onSave={handleProjectSave}>
+                    <Button>
+                      <Plus className="mr-2 h-4 w-4" /> Add Project
+                    </Button>
+                  </AddProjectDialog>
                   <ImportCsvDialog onProjectsAdd={handleCsvImport} />
                 </div>
                 <Button onClick={handleOptimize} disabled={isPending || projects.length === 0} className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
@@ -205,7 +243,7 @@ export default function Home() {
           </div>
         </div>
         
-        <Timeline projects={filteredProjects} onProjectDelete={handleProjectDelete} />
+        <Timeline projects={filteredProjects} onProjectDelete={handleProjectDelete} onProjectEdit={handleProjectEdit} />
 
       </main>
       <footer className="text-center mt-12 text-muted-foreground text-sm">

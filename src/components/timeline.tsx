@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -11,7 +12,7 @@ import {
 } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Users, Calendar, Briefcase, Link as LinkIcon, X } from "lucide-react";
+import { Users, Calendar, Briefcase, Link as LinkIcon, X, Pencil } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,7 +56,7 @@ const getTeamColor = (teamName: string): string => {
 };
 
 
-const TimelineProject = ({ project, year, rowIndex, onDelete }: { project: Project; year: number; rowIndex: number; onDelete: (projectId: string) => void; }) => {
+const TimelineProject = ({ project, year, rowIndex, onDelete, onEdit }: { project: Project; year: number; rowIndex: number; onDelete: (projectId: string) => void; onEdit: (project: Project) => void; }) => {
   const [popoverOpen, setPopoverOpen] = React.useState(false);
   const projectStart = parseISO(project.startDate);
   const projectEnd = parseISO(project.endDate);
@@ -95,34 +96,40 @@ const TimelineProject = ({ project, year, rowIndex, onDelete }: { project: Proje
         </div>
       </PopoverTrigger>
       <PopoverContent className="w-80">
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 text-muted-foreground hover:text-destructive">
-                <X className="h-4 w-4" />
-                <span className="sr-only">Delete Project</span>
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete the "{project.name}" project.
-                </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction 
-                  onClick={() => {
-                    onDelete(project.id)
-                    setPopoverOpen(false)
-                  }}
-                  className={buttonVariants({ variant: "destructive" })}
-                >
-                  Delete
-                </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <div className="absolute top-2 right-2 flex items-center gap-1">
+          <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => onEdit(project)}>
+              <Pencil className="h-4 w-4" />
+              <span className="sr-only">Edit Project</span>
+          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive">
+                  <X className="h-4 w-4" />
+                  <span className="sr-only">Delete Project</span>
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete the "{project.name}" project.
+                  </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={() => {
+                      onDelete(project.id)
+                      setPopoverOpen(false)
+                    }}
+                    className={buttonVariants({ variant: "destructive" })}
+                  >
+                    Delete
+                  </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
         <Card className="border-none shadow-none">
           <CardHeader className="pb-4 px-2 pt-2">
             <CardTitle className="font-headline text-base">{project.name}</CardTitle>
@@ -202,7 +209,7 @@ const getProjectRows = (projects: Project[], year: number) => {
     return {projectRowMap, rowCount: rows.length};
 }
 
-export function Timeline({ projects, onProjectDelete }: { projects: Project[]; onProjectDelete: (projectId: string) => void; }) {
+export function Timeline({ projects, onProjectDelete, onProjectEdit }: { projects: Project[]; onProjectDelete: (projectId: string) => void; onProjectEdit: (project: Project) => void; }) {
   const allYears = Array.from(new Set(projects.flatMap(p => {
     try {
       return [getYear(parseISO(p.startDate)), getYear(parseISO(p.endDate))];
@@ -239,7 +246,7 @@ export function Timeline({ projects, onProjectDelete }: { projects: Project[]; o
         {/* Projects */}
         <div className="relative pt-12 h-full">
           {projects.map((project) => (
-            <TimelineProject key={project.id} project={project} year={displayYear} rowIndex={projectRowMap.get(project.id) || 0} onDelete={onProjectDelete} />
+            <TimelineProject key={project.id} project={project} year={displayYear} rowIndex={projectRowMap.get(project.id) || 0} onDelete={onProjectDelete} onEdit={onProjectEdit} />
           ))}
         </div>
       </div>
