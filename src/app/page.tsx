@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useMemo } from "react";
 import type { Project } from "@/lib/types";
 import { AddProjectDialog, type ProjectFormValues } from "@/components/add-project-dialog";
 import { Timeline } from "@/components/timeline";
@@ -11,6 +11,8 @@ import { getOptimalSequence } from "@/app/actions";
 import { Lightbulb, Loader2, Upload } from "lucide-react";
 import { format } from "date-fns";
 import { ImportCsvDialog } from "@/components/import-csv-dialog";
+import { MultiSelectFilter } from "@/components/multi-select-filter";
+import { Separator } from "@/components/ui/separator";
 
 const initialProjects: Project[] = [
     { id: 'proj-1', name: 'Initial Planning & Research', epicNumber: 'EPIC-001', team: 'Strategy', startDate: '2024-01-15', endDate: '2024-02-28', resources: 'PM, UX Researcher', dependencies: 'None' },
@@ -27,6 +29,36 @@ export default function Home() {
   const [teamAvailability, setTeamAvailability] = useState("All teams are available with standard capacity. Marketing team has reduced capacity in June due to annual conference.");
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+
+  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
+  const [selectedResources, setSelectedResources] = useState<string[]>([]);
+
+  const allTeams = useMemo(() => [...new Set(projects.map(p => p.team))].sort(), [projects]);
+  const allResources = useMemo(() => {
+    const resourcesSet = new Set<string>();
+    projects.forEach(p => {
+        p.resources.split(',').forEach(r => {
+            const trimmed = r.trim();
+            if(trimmed) resourcesSet.add(trimmed);
+        });
+    });
+    return [...resourcesSet].sort();
+  }, [projects]);
+  
+  const hasActiveFilters = selectedTeams.length > 0 || selectedResources.length > 0;
+  
+  const filteredProjects = useMemo(() => {
+    if (!hasActiveFilters) return projects;
+
+    return projects.filter(project => {
+      const teamMatch = selectedTeams.length === 0 || selectedTeams.includes(project.team);
+      
+      const projectResources = project.resources.split(',').map(r => r.trim()).filter(Boolean);
+      const resourceMatch = selectedResources.length === 0 || projectResources.some(r => selectedResources.includes(r));
+      
+      return teamMatch && resourceMatch;
+    });
+  }, [projects, selectedTeams, selectedResources, hasActiveFilters]);
 
   const handleProjectAdd = (data: ProjectFormValues) => {
     const newProject: Project = {
@@ -47,10 +79,12 @@ export default function Home() {
   };
 
   const handleOptimize = () => {
-    if (projects.length === 0) {
+    const projectsToOptimize = hasActiveFilters ? filteredProjects : projects;
+
+    if (projectsToOptimize.length === 0) {
       toast({
         title: "No projects to optimize",
-        description: "Add some projects before using the AI sequencer.",
+        description: "Add some projects or adjust filters before using the AI sequencer.",
         variant: "destructive"
       });
       return;
@@ -58,13 +92,22 @@ export default function Home() {
 
     startTransition(async () => {
       try {
-        const result = await getOptimalSequence(projects, teamAvailability);
+        const result = await getOptimalSequence(projectsToOptimize, teamAvailability);
         
         const projectMap = new Map(projects.map(p => [p.name, p]));
-        const sortedProjects = result.optimalSequence.map(name => projectMap.get(name)).filter(Boolean) as Project[];
-        const unsortedProjects = projects.filter(p => !result.optimalSequence.includes(p.name));
-    
-        const newProjectList = [...sortedProjects, ...unsortedProjects];
+        
+        const sortedOptimizedProjects = result.optimalSequence
+            .map(name => projectMap.get(name))
+            .filter(Boolean) as Project[];
+        
+        const remainingOptimizedProjects = projectsToOptimize.filter(p => !result.optimalSequence.includes(p.name));
+        const unoptimizedProjects = projects.filter(p => !projectsToOptimize.find(optP => optP.id === p.id));
+        
+        const newProjectList = [
+            ...sortedOptimizedProjects, 
+            ...remainingOptimizedProjects,
+            ...unoptimizedProjects
+        ];
 
         setProjects(newProjectList);
         toast({
@@ -82,6 +125,11 @@ export default function Home() {
       }
     });
   };
+
+  const clearFilters = () => {
+    setSelectedTeams([]);
+    setSelectedResources([]);
+  }
   
   return (
     <div className="min-h-screen bg-background text-foreground p-4 sm:p-6 lg:p-8">
@@ -109,19 +157,47 @@ export default function Home() {
                   <AddProjectDialog onProjectAdd={handleProjectAdd} />
                   <ImportCsvDialog onProjectsAdd={handleCsvImport} />
                 </div>
-                <Button onClick={handleOptimize} disabled={isPending} className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+                <Button onClick={handleOptimize} disabled={isPending || projects.length === 0} className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
                 {isPending ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                     <Lightbulb className="mr-2 h-4 w-4" />
                 )}
-                Optimize with AI
+                Optimize {hasActiveFilters ? `${filteredProjects.length} ` : ''}with AI
                 </Button>
             </div>
           </div>
+          <Separator className="my-6" />
+          <div>
+            <div className="flex flex-wrap items-center gap-4">
+                <h3 className="text-lg font-semibold font-headline">Filters</h3>
+                <MultiSelectFilter
+                    label="Teams"
+                    options={allTeams}
+                    selectedValues={selectedTeams}
+                    onSelectedValuesChange={setSelectedTeams}
+                />
+                <MultiSelectFilter
+                    label="Resources"
+                    options={allResources}
+                    selectedValues={selectedResources}
+                    onSelectedValuesChange={setSelectedResources}
+                />
+                {hasActiveFilters && (
+                    <Button variant="ghost" onClick={clearFilters} className="text-sm">
+                        Clear Filters
+                    </Button>
+                )}
+            </div>
+            {hasActiveFilters && (
+                <div className="mt-4 text-sm text-muted-foreground">
+                    Showing {filteredProjects.length} of {projects.length} projects.
+                </div>
+            )}
+          </div>
         </div>
         
-        <Timeline projects={projects} />
+        <Timeline projects={filteredProjects} />
 
       </main>
       <footer className="text-center mt-12 text-muted-foreground text-sm">
