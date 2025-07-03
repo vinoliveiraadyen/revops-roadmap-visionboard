@@ -68,15 +68,16 @@ const TimelineProject = ({ project, year, rowIndex }: { project: Project; year: 
     <Popover>
       <PopoverTrigger asChild>
         <div
-          className="absolute h-10 bg-card rounded-md flex items-center px-3 text-card-foreground hover:bg-muted transition-colors cursor-pointer shadow-sm border-l-4"
+          className="absolute h-12 bg-card rounded-md flex flex-col justify-center px-3 text-card-foreground hover:bg-muted transition-colors cursor-pointer shadow-sm border-l-4 overflow-hidden"
           style={{
             left: `${left}%`,
             width: `${width}%`,
-            top: `${2.5 + rowIndex * 3}rem`, 
+            top: `${2.5 + rowIndex * 3.5}rem`, 
             borderColor: teamColor,
           }}
         >
           <p className="text-sm font-medium truncate">{project.name}</p>
+          <p className="text-xs text-muted-foreground truncate">{project.resources}</p>
         </div>
       </PopoverTrigger>
       <PopoverContent className="w-80">
@@ -171,7 +172,7 @@ export function Timeline({ projects }: { projects: Project[] }) {
   
   const months = Array.from({ length: 12 }, (_, i) => format(new Date(displayYear, i, 1), "MMM"));
   const { projectRowMap, rowCount } = getProjectRows(projects, displayYear);
-  const timelineHeight = (rowCount * 3) + 8; // 3rem per row + padding
+  const timelineHeight = (rowCount * 3.5) + 8; // 3.5rem per row + padding
 
   return (
     <div className="bg-card/50 rounded-lg p-4 relative" style={{ minHeight: `${timelineHeight}rem` }}>
