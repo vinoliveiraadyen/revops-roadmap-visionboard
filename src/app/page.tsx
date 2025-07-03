@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useTransition, type DragEvent } from "react";
-import type { Project, ProjectsByQuarter, Quarter } from "@/lib/types";
+import { useState, useTransition } from "react";
+import type { Project } from "@/lib/types";
 import { AddProjectDialog, type ProjectFormValues } from "@/components/add-project-dialog";
-import { TimelineQuarter } from "@/components/timeline-quarter";
+import { Timeline } from "@/components/timeline";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -11,27 +11,18 @@ import { getOptimalSequence } from "@/app/actions";
 import { Lightbulb, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 
-const initialProjects: ProjectsByQuarter = {
-  1: [
+const initialProjects: Project[] = [
     { id: 'proj-1', name: 'Initial Planning & Research', epicNumber: 'EPIC-001', team: 'Strategy', startDate: '2024-01-15', endDate: '2024-02-28', resources: 'PM, UX Researcher', dependencies: 'None' },
-  ],
-  2: [
-    { id: 'proj-2', name: 'Develop Core Features', epicNumber: 'EPIC-002', team: 'Engineering', startDate: '2024-04-01', endDate: '2024-06-15', resources: 'Dev Team A, QA', dependencies: 'Initial Planning & Research' },
-  ],
-  3: [],
-  4: [],
-};
-
-const getQuarterFromDate = (date: Date): Quarter => {
-  const month = date.getMonth(); // 0-11
-  if (month < 3) return 1;
-  if (month < 6) return 2;
-  if (month < 9) return 3;
-  return 4;
-};
+    { id: 'proj-2', name: 'Develop Core Features', epicNumber: 'EPIC-002', team: 'Engineering', startDate: '2024-03-01', endDate: '2024-06-15', resources: 'Dev Team A, QA', dependencies: 'Initial Planning & Research' },
+    { id: 'proj-7', name: 'Mobile App Design', epicNumber: 'EPIC-007', team: 'Design', startDate: '2024-02-01', endDate: '2024-04-30', resources: 'UI/UX Designer', dependencies: 'Initial Planning & Research' },
+    { id: 'proj-6', name: 'API Integration', epicNumber: 'EPIC-006', team: 'Engineering', startDate: '2024-04-15', endDate: '2024-05-30', resources: 'Dev Team A', dependencies: 'Develop Core Features' },
+    { id: 'proj-3', name: 'User Testing & Feedback', epicNumber: 'EPIC-003', team: 'QA & UX', startDate: '2024-06-16', endDate: '2024-07-31', resources: 'Test Group, UX Designer', dependencies: 'Develop Core Features' },
+    { id: 'proj-4', name: 'Marketing Launch Campaign', epicNumber: 'EPIC-004', team: 'Marketing', startDate: '2024-08-01', endDate: '2024-09-15', resources: 'Marketing Team', dependencies: 'Develop Core Features' },
+    { id: 'proj-5', name: 'Q4 Feature Enhancements', epicNumber: 'EPIC-005', team: 'Engineering', startDate: '2024-10-01', endDate: '2024-11-30', resources: 'Dev Team B', dependencies: 'User Testing & Feedback' },
+];
 
 export default function Home() {
-  const [projectsByQuarter, setProjectsByQuarter] = useState<ProjectsByQuarter>(initialProjects);
+  const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [teamAvailability, setTeamAvailability] = useState("All teams are available with standard capacity. Marketing team has reduced capacity in June due to annual conference.");
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
@@ -47,45 +38,11 @@ export default function Home() {
       endDate: format(data.endDate, "yyyy-MM-dd"),
       dependencies: data.dependencies || "None",
     };
-    const quarter = getQuarterFromDate(data.startDate);
-    setProjectsByQuarter(prev => ({
-      ...prev,
-      [quarter]: [...prev[quarter], newProject],
-    }));
-  };
-
-  const handleDragStart = (e: DragEvent<HTMLDivElement>, projectId: string) => {
-    e.dataTransfer.setData("projectId", projectId);
-  };
-
-  const handleDrop = (e: DragEvent<HTMLDivElement>, targetQuarter: Quarter) => {
-    const projectId = e.dataTransfer.getData("projectId");
-    if (!projectId) return;
-
-    let sourceQuarter: Quarter | null = null;
-    let projectToMove: Project | undefined;
-
-    const updatedProjects = JSON.parse(JSON.stringify(projectsByQuarter));
-
-    for (const q of Object.keys(updatedProjects)) {
-        const quarterKey = parseInt(q) as Quarter;
-        const projectIndex = updatedProjects[quarterKey].findIndex((p: Project) => p.id === projectId);
-        if (projectIndex !== -1) {
-            sourceQuarter = quarterKey;
-            [projectToMove] = updatedProjects[quarterKey].splice(projectIndex, 1);
-            break;
-        }
-    }
-    
-    if (projectToMove && sourceQuarter) {
-        updatedProjects[targetQuarter].push(projectToMove);
-        setProjectsByQuarter(updatedProjects);
-    }
+    setProjects(prev => [...prev, newProject]);
   };
 
   const handleOptimize = () => {
-    const allProjects = Object.values(projectsByQuarter).flat();
-    if (allProjects.length === 0) {
+    if (projects.length === 0) {
       toast({
         title: "No projects to optimize",
         description: "Add some projects before using the AI sequencer.",
@@ -96,27 +53,15 @@ export default function Home() {
 
     startTransition(async () => {
       try {
-        const result = await getOptimalSequence(allProjects, teamAvailability);
+        const result = await getOptimalSequence(projects, teamAvailability);
         
-        const projectMap = new Map(allProjects.map(p => [p.name, p]));
+        const projectMap = new Map(projects.map(p => [p.name, p]));
         const sortedProjects = result.optimalSequence.map(name => projectMap.get(name)).filter(Boolean) as Project[];
+        const unsortedProjects = projects.filter(p => !result.optimalSequence.includes(p.name));
+    
+        const newProjectList = [...sortedProjects, ...unsortedProjects];
 
-        const newProjectsByQuarter: ProjectsByQuarter = { 1: [], 2: [], 3: [], 4: [] };
-        sortedProjects.forEach(p => {
-            const quarter = getQuarterFromDate(new Date(p.startDate));
-            newProjectsByQuarter[quarter].push(p);
-        });
-
-        allProjects.forEach(p => {
-          if (!result.optimalSequence.includes(p.name)) {
-            const quarter = getQuarterFromDate(new Date(p.startDate));
-            if (!newProjectsByQuarter[quarter].some(np => np.id === p.id)) {
-                newProjectsByQuarter[quarter].push(p);
-            }
-          }
-        });
-
-        setProjectsByQuarter(newProjectsByQuarter);
+        setProjects(newProjectList);
         toast({
           title: "AI Suggestion Applied!",
           description: <div className="w-full mt-2"><p className="font-semibold">Reasoning:</p><p className="text-xs whitespace-pre-wrap">{result.reasoning}</p></div>,
@@ -168,20 +113,11 @@ export default function Home() {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {(Object.keys(projectsByQuarter) as (keyof ProjectsByQuarter)[]).map((q) => (
-            <TimelineQuarter
-              key={q}
-              quarter={q}
-              projects={projectsByQuarter[q]}
-              onDragStart={handleDragStart}
-              onDrop={handleDrop}
-            />
-          ))}
-        </div>
+        <Timeline projects={projects} />
+
       </main>
       <footer className="text-center mt-12 text-muted-foreground text-sm">
-        <p>Drag and drop cards to reorganize. Use the AI to find the optimal sequence.</p>
+        <p>Use the AI to find the optimal sequence. Click on a project to see details.</p>
       </footer>
     </div>
   );
