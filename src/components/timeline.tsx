@@ -87,7 +87,7 @@ const TimelineProject = ({ project, year, rowIndex, onDelete, onEdit }: { projec
           style={{
             left: `${left}%`,
             width: `${width}%`,
-            top: `${2.5 + rowIndex * 3.5}rem`, 
+            top: `${4 + rowIndex * 3.5}rem`, 
             borderColor: teamColor,
           }}
         >
@@ -221,7 +221,7 @@ export function Timeline({ projects, onProjectDelete, onProjectEdit }: { project
   
   const months = Array.from({ length: 12 }, (_, i) => format(new Date(displayYear, i, 1), "MMM"));
   const { projectRowMap, rowCount } = getProjectRows(projects, displayYear);
-  const timelineHeight = (rowCount * 3.5) + 8; // 3.5rem per row + padding
+  const timelineHeight = (rowCount * 3.5) + 9.5; // 3.5rem per row + padding
 
   return (
     <div className="bg-card/50 rounded-lg p-4 relative" style={{ minHeight: `${timelineHeight}rem` }}>
@@ -244,7 +244,7 @@ export function Timeline({ projects, onProjectDelete, onProjectEdit }: { project
         </div>
 
         {/* Projects */}
-        <div className="relative pt-20 h-full">
+        <div className="relative pt-12 h-full">
           {projects.map((project) => (
             <TimelineProject key={project.id} project={project} year={displayYear} rowIndex={projectRowMap.get(project.id) || 0} onDelete={onProjectDelete} onEdit={onProjectEdit} />
           ))}
