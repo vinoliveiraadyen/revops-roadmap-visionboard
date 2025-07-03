@@ -78,6 +78,14 @@ export default function Home() {
       setProjects(prev => [...prev, ...newProjects]);
   };
 
+  const handleProjectDelete = (projectId: string) => {
+    setProjects(prev => prev.filter(p => p.id !== projectId));
+    toast({
+      title: "Project Deleted",
+      description: "The project has been successfully removed.",
+    });
+  };
+
   const handleOptimize = () => {
     const projectsToOptimize = hasActiveFilters ? filteredProjects : projects;
 
@@ -197,7 +205,7 @@ export default function Home() {
           </div>
         </div>
         
-        <Timeline projects={filteredProjects} />
+        <Timeline projects={filteredProjects} onProjectDelete={handleProjectDelete} />
 
       </main>
       <footer className="text-center mt-12 text-muted-foreground text-sm">

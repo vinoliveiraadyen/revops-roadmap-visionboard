@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import type { Project } from "@/lib/types";
 import {
   startOfYear,
@@ -10,7 +11,19 @@ import {
 } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Users, Calendar, Briefcase, Link as LinkIcon } from "lucide-react";
+import { Users, Calendar, Briefcase, Link as LinkIcon, X } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button, buttonVariants } from "@/components/ui/button";
 
 // Helper function to get the total number of days in a year
 const getDaysInYear = (date: Date) => {
@@ -42,7 +55,8 @@ const getTeamColor = (teamName: string): string => {
 };
 
 
-const TimelineProject = ({ project, year, rowIndex }: { project: Project; year: number; rowIndex: number }) => {
+const TimelineProject = ({ project, year, rowIndex, onDelete }: { project: Project; year: number; rowIndex: number; onDelete: (projectId: string) => void; }) => {
+  const [popoverOpen, setPopoverOpen] = React.useState(false);
   const projectStart = parseISO(project.startDate);
   const projectEnd = parseISO(project.endDate);
   
@@ -65,7 +79,7 @@ const TimelineProject = ({ project, year, rowIndex }: { project: Project; year: 
   const teamColor = getTeamColor(project.team);
 
   return (
-    <Popover>
+    <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
       <PopoverTrigger asChild>
         <div
           className="absolute h-12 bg-card rounded-md flex flex-col justify-center px-3 text-card-foreground hover:bg-muted transition-colors cursor-pointer shadow-sm border-l-4 overflow-hidden"
@@ -81,6 +95,34 @@ const TimelineProject = ({ project, year, rowIndex }: { project: Project; year: 
         </div>
       </PopoverTrigger>
       <PopoverContent className="w-80">
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 text-muted-foreground hover:text-destructive">
+                <X className="h-4 w-4" />
+                <span className="sr-only">Delete Project</span>
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the "{project.name}" project.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={() => {
+                    onDelete(project.id)
+                    setPopoverOpen(false)
+                  }}
+                  className={buttonVariants({ variant: "destructive" })}
+                >
+                  Delete
+                </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <Card className="border-none shadow-none">
           <CardHeader className="pb-4 px-2 pt-2">
             <CardTitle className="font-headline text-base">{project.name}</CardTitle>
@@ -160,7 +202,7 @@ const getProjectRows = (projects: Project[], year: number) => {
     return {projectRowMap, rowCount: rows.length};
 }
 
-export function Timeline({ projects }: { projects: Project[] }) {
+export function Timeline({ projects, onProjectDelete }: { projects: Project[]; onProjectDelete: (projectId: string) => void; }) {
   const allYears = Array.from(new Set(projects.flatMap(p => {
     try {
       return [getYear(parseISO(p.startDate)), getYear(parseISO(p.endDate))];
@@ -197,7 +239,7 @@ export function Timeline({ projects }: { projects: Project[] }) {
         {/* Projects */}
         <div className="relative pt-12 h-full">
           {projects.map((project) => (
-            <TimelineProject key={project.id} project={project} year={displayYear} rowIndex={projectRowMap.get(project.id) || 0} />
+            <TimelineProject key={project.id} project={project} year={displayYear} rowIndex={projectRowMap.get(project.id) || 0} onDelete={onProjectDelete} />
           ))}
         </div>
       </div>
