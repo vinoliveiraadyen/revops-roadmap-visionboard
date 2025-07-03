@@ -19,12 +19,34 @@ const getDaysInYear = (date: Date) => {
   return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0 ? 366 : 365;
 };
 
+const TEAM_COLORS = [
+  "207 82% 68%", // blueish (primary)
+  "12 76% 61%",  // orange (chart-1)
+  "150 83% 68%", // greenish (accent)
+  "280 65% 60%", // purple (chart-4 dark)
+  "43 74% 66%",  // yellow (chart-4)
+  "340 75% 55%", // pinkish (chart-5 dark)
+  "173 58% 39%", // dark green (chart-2)
+  "27 87% 67%",  // light orange (chart-5)
+];
+
+const getTeamColor = (teamName: string): string => {
+  if (!teamName) return `hsl(${TEAM_COLORS[0]})`;
+  let hash = 0;
+  for (let i = 0; i < teamName.length; i++) {
+    hash = teamName.charCodeAt(i) + ((hash << 5) - hash);
+    hash |= 0; // Convert to 32bit integer
+  }
+  const colorIndex = Math.abs(hash % TEAM_COLORS.length);
+  return `hsl(${TEAM_COLORS[colorIndex]})`;
+};
+
 
 const TimelineProject = ({ project, year, rowIndex }: { project: Project; year: number; rowIndex: number }) => {
   const projectStart = parseISO(project.startDate);
   const projectEnd = parseISO(project.endDate);
   
-  if (projectStart.getFullYear() > year || projectEnd.getFullYear() < year) return null;
+  if (getYear(projectStart) > year || getYear(projectEnd) < year) return null;
 
   const yearStartDate = startOfYear(new Date(year, 0, 1));
   const totalDays = getDaysInYear(yearStartDate);
@@ -40,16 +62,18 @@ const TimelineProject = ({ project, year, rowIndex }: { project: Project; year: 
 
   const left = (clampedStartDay / totalDays) * 100;
   const width = (clampedDuration / totalDays) * 100;
+  const teamColor = getTeamColor(project.team);
 
   return (
     <Popover>
       <PopoverTrigger asChild>
         <div
-          className="absolute h-10 bg-primary/80 rounded-lg flex items-center px-3 text-primary-foreground hover:bg-primary transition-colors cursor-pointer shadow-md"
+          className="absolute h-10 bg-card rounded-md flex items-center px-3 text-card-foreground hover:bg-muted transition-colors cursor-pointer shadow-sm border-l-4"
           style={{
             left: `${left}%`,
             width: `${width}%`,
             top: `${2.5 + rowIndex * 3}rem`, 
+            borderColor: teamColor,
           }}
         >
           <p className="text-sm font-medium truncate">{project.name}</p>
@@ -64,7 +88,13 @@ const TimelineProject = ({ project, year, rowIndex }: { project: Project; year: 
           <CardContent className="space-y-3 text-sm px-2 pb-2">
             <div className="flex items-center gap-2 text-muted-foreground">
               <Users className="h-4 w-4 flex-shrink-0" />
-              <span>{project.team}</span>
+              <div className="flex items-center gap-2">
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: teamColor }}
+                />
+                <span>{project.team}</span>
+              </div>
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Briefcase className="h-4 w-4 flex-shrink-0" />
@@ -92,7 +122,11 @@ const TimelineProject = ({ project, year, rowIndex }: { project: Project; year: 
 const getProjectRows = (projects: Project[], year: number) => {
     const rows: {project: Project, endDate: Date}[][] = [];
     const sortedProjects = [...projects]
-      .filter(p => getYear(parseISO(p.startDate)) === year)
+      .filter(p => {
+          const startYear = getYear(parseISO(p.startDate));
+          const endYear = getYear(parseISO(p.endDate));
+          return startYear === year || endYear === year || (startYear < year && endYear > year)
+        })
       .sort((a,b) => parseISO(a.startDate).getTime() - parseISO(b.startDate).getTime());
 
     sortedProjects.forEach(project => {
@@ -100,7 +134,7 @@ const getProjectRows = (projects: Project[], year: number) => {
         const projectStart = parseISO(project.startDate);
         for (const row of rows) {
             const lastProjectInRow = row[row.length - 1];
-            if (projectStart > lastProjectInRow.endDate) {
+            if (projectStart >= lastProjectInRow.endDate) {
                 row.push({project, endDate: parseISO(project.endDate)});
                 placed = true;
                 break;
@@ -122,9 +156,11 @@ const getProjectRows = (projects: Project[], year: number) => {
 }
 
 export function Timeline({ projects }: { projects: Project[] }) {
-  const year = projects.length > 0 ? getYear(parseISO(projects[0].startDate)) : new Date().getFullYear();
-  const months = Array.from({ length: 12 }, (_, i) => format(new Date(year, i, 1), "MMM"));
-  const { projectRowMap, rowCount } = getProjectRows(projects, year);
+  const allYears = Array.from(new Set(projects.flatMap(p => [getYear(parseISO(p.startDate)), getYear(parseISO(p.endDate))]))).sort();
+  const displayYear = allYears.length > 0 ? allYears[0] : new Date().getFullYear();
+  
+  const months = Array.from({ length: 12 }, (_, i) => format(new Date(displayYear, i, 1), "MMM"));
+  const { projectRowMap, rowCount } = getProjectRows(projects, displayYear);
   const timelineHeight = (rowCount * 3) + 8; // 3rem per row + padding
 
   return (
@@ -150,7 +186,7 @@ export function Timeline({ projects }: { projects: Project[] }) {
         {/* Projects */}
         <div className="relative pt-12 h-full">
           {projects.map((project) => (
-            <TimelineProject key={project.id} project={project} year={year} rowIndex={projectRowMap.get(project.id) || 0} />
+            <TimelineProject key={project.id} project={project} year={displayYear} rowIndex={projectRowMap.get(project.id) || 0} />
           ))}
         </div>
       </div>
