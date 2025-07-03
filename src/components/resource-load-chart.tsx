@@ -8,6 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, type ChartConfig } from '@/components/ui/chart';
 import { eachMonthOfInterval, endOfMonth, format, getYear, parseISO, startOfMonth, startOfYear, endOfYear } from 'date-fns';
 
+const sanitizeForCssIdentifier = (name: string) => {
+    // Replaces all non-alphanumeric characters with underscores to ensure a valid CSS identifier.
+    return name.replace(/[^a-zA-Z0-9]/g, '_');
+}
+
 export function ResourceLoadChart({ projects }: { projects: Project[] }) {
     const { chartData, allResources, year } = useMemo(() => {
         if (!projects || projects.length === 0) {
@@ -23,8 +28,8 @@ export function ResourceLoadChart({ projects }: { projects: Project[] }) {
         });
         const allResources = [...resourcesSet].sort();
 
-        // Use the year of the first project as the display year for the chart
-        const displayYear = getYear(parseISO(projects[0].startDate));
+        const firstProjectWithDate = projects.find(p => p.startDate);
+        const displayYear = firstProjectWithDate ? getYear(parseISO(firstProjectWithDate.startDate)) : new Date().getFullYear();
 
         const months = eachMonthOfInterval({
             start: startOfYear(new Date(displayYear, 0, 1)),
@@ -36,9 +41,9 @@ export function ResourceLoadChart({ projects }: { projects: Project[] }) {
                 name: format(month, 'MMM'),
             };
 
-            // Initialize all resources with 0 for this month
+            // Initialize all sanitized resources with 0 for this month
             allResources.forEach(resource => {
-                monthData[resource] = 0;
+                monthData[sanitizeForCssIdentifier(resource)] = 0;
             });
 
             projects.forEach(project => {
@@ -50,8 +55,10 @@ export function ResourceLoadChart({ projects }: { projects: Project[] }) {
 
                     if (projectStart <= monthEnd && projectEnd >= monthStart) {
                         project.resources.split(',').map(r => r.trim()).forEach(resource => {
-                            if (monthData.hasOwnProperty(resource)) {
-                                (monthData[resource] as number) += 1;
+                            if (!resource) return;
+                            const sanitizedResource = sanitizeForCssIdentifier(resource);
+                            if (monthData.hasOwnProperty(sanitizedResource)) {
+                                (monthData[sanitizedResource] as number) += 1;
                             }
                         });
                     }
@@ -69,7 +76,8 @@ export function ResourceLoadChart({ projects }: { projects: Project[] }) {
     const chartConfig = useMemo(() => {
         const config: ChartConfig = {};
         allResources.forEach((resource, index) => {
-            config[resource] = {
+            // Use the sanitized key for the config, but the original name for the label
+            config[sanitizeForCssIdentifier(resource)] = {
                 label: resource,
                 color: `hsl(var(--chart-${(index % 5) + 1}))`,
             };
@@ -120,15 +128,18 @@ export function ResourceLoadChart({ projects }: { projects: Project[] }) {
                           content={<ChartTooltipContent indicator="dot" />}
                         />
                         <ChartLegend content={<ChartLegendContent />} />
-                        {allResources.map((resource) => (
-                            <Bar
-                                key={resource}
-                                dataKey={resource}
-                                stackId="a"
-                                fill={`var(--color-${resource})`}
-                                radius={[4, 4, 0, 0]}
-                            />
-                        ))}
+                        {allResources.map((resource) => {
+                            const sanitizedResource = sanitizeForCssIdentifier(resource);
+                            return (
+                                <Bar
+                                    key={sanitizedResource}
+                                    dataKey={sanitizedResource}
+                                    stackId="a"
+                                    fill={`var(--color-${sanitizedResource})`}
+                                    radius={[4, 4, 0, 0]}
+                                />
+                            )
+                        })}
                     </BarChart>
                 </ChartContainer>
             </CardContent>
