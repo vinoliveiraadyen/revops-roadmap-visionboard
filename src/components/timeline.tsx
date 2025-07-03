@@ -123,9 +123,13 @@ const getProjectRows = (projects: Project[], year: number) => {
     const rows: {project: Project, endDate: Date}[][] = [];
     const sortedProjects = [...projects]
       .filter(p => {
-          const startYear = getYear(parseISO(p.startDate));
-          const endYear = getYear(parseISO(p.endDate));
-          return startYear === year || endYear === year || (startYear < year && endYear > year)
+          try {
+            const startYear = getYear(parseISO(p.startDate));
+            const endYear = getYear(parseISO(p.endDate));
+            return startYear <= year && endYear >= year;
+          } catch(e) {
+            return false;
+          }
         })
       .sort((a,b) => parseISO(a.startDate).getTime() - parseISO(b.startDate).getTime());
 
@@ -156,7 +160,13 @@ const getProjectRows = (projects: Project[], year: number) => {
 }
 
 export function Timeline({ projects }: { projects: Project[] }) {
-  const allYears = Array.from(new Set(projects.flatMap(p => [getYear(parseISO(p.startDate)), getYear(parseISO(p.endDate))]))).sort();
+  const allYears = Array.from(new Set(projects.flatMap(p => {
+    try {
+      return [getYear(parseISO(p.startDate)), getYear(parseISO(p.endDate))];
+    } catch (e) {
+      return [];
+    }
+  }))).sort();
   const displayYear = allYears.length > 0 ? allYears[0] : new Date().getFullYear();
   
   const months = Array.from({ length: 12 }, (_, i) => format(new Date(displayYear, i, 1), "MMM"));
@@ -170,7 +180,7 @@ export function Timeline({ projects }: { projects: Project[] }) {
         <div className="grid grid-cols-12 h-full absolute inset-0">
           {months.map((month, i) => (
             <div key={month} className={`h-full ${i < 11 ? 'border-r border-dashed border-border' : ''}`}>
-              <div className="p-2 text-sm font-semibold text-muted-foreground">{month}</div>
+              <div className="p-2 pt-6 text-sm font-semibold text-muted-foreground">{month}</div>
             </div>
           ))}
         </div>
