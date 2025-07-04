@@ -233,28 +233,28 @@ export default function Home() {
                     className="h-24 bg-background"
                 />
             </div>
-            <div className="flex flex-col gap-4 w-full md:w-auto pt-0 md:pt-8">
+            <div className="w-full md:w-auto pt-0 md:pt-8">
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <div className="flex-grow">
+                  <div className="flex-grow flex flex-col gap-2">
                     <AddProjectDialog onSave={handleProjectSave}>
                       <Button className="w-full">
                         <Plus className="mr-2 h-4 w-4" /> Add Project
                       </Button>
                     </AddProjectDialog>
+                    <Button onClick={handleOptimize} disabled={isPending || projects.length === 0} className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+                    {isPending ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <Lightbulb className="mr-2 h-4 w-4" />
+                    )}
+                    Optimize {hasActiveFilters ? `${filteredProjects.length} ` : ''}with AI
+                    </Button>
                   </div>
                   <div className="flex-grow flex flex-col gap-2">
                     <ImportCsvDialog onProjectsAdd={handleCsvImport} />
                     <ExportCsvButton projects={projects} />
                   </div>
                 </div>
-                <Button onClick={handleOptimize} disabled={isPending || projects.length === 0} className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
-                {isPending ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                    <Lightbulb className="mr-2 h-4 w-4" />
-                )}
-                Optimize {hasActiveFilters ? `${filteredProjects.length} ` : ''}with AI
-                </Button>
             </div>
           </div>
           <Separator className="my-6" />
