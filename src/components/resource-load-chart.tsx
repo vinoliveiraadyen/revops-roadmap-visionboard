@@ -13,7 +13,7 @@ const sanitizeForCssIdentifier = (name: string) => {
     return name.replace(/[^a-zA-Z0-9]/g, '_');
 }
 
-export function ResourceLoadChart({ projects, selectedOwners }: { projects: Project[]; selectedOwners?: string[] }) {
+export function ResourceAllocationChart({ projects, selectedOwners }: { projects: Project[]; selectedOwners?: string[] }) {
     const { chartData, ownersToDisplay, year } = useMemo(() => {
         if (!projects || projects.length === 0) {
             return { chartData: [], ownersToDisplay: [], year: new Date().getFullYear() };

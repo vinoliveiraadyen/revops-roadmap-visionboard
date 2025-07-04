@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -34,32 +35,32 @@ const getDaysInYear = (date: Date) => {
 };
 
 const TEAM_COLORS = [
-  "207 82% 68%", // Primary Blue
-  "150 83% 68%", // Accent Green
-  "43 93% 77%",  // Chart-3 Yellow
-  "10 93% 80%",  // Chart-4 Orange
-  "330 93% 82%", // Chart-5 Pink
-  "173 58% 39%", // Darker Green
-  "260 85% 70%", // Purple
-  "198 93% 79%", // Chart-1 Cyan
-  "350 88% 75%", // Reddish
-  "220 80% 75%", // Indigo
-  "60 85% 65%",  // Lime Green
-  "30 90% 68%",  // Brownish Orange
+  "210 90% 60%", // Bright Blue
+  "3 90% 60%",   // Bright Red
+  "145 70% 45%", // Strong Green
+  "35 95% 55%",  // Bright Orange
+  "265 80% 65%", // Vibrant Purple
+  "330 85% 60%", // Bright Pink
+  "190 85% 50%", // Teal
+  "50 95% 55%",  // Gold
+  "280 70% 60%", // Indigo
+  "0 80% 55%",   // Strong Red
+  "170 75% 45%", // Sea Green
+  "300 80% 65%", // Magenta
 ];
 
 const getTeamColor = (teamName: string): string => {
   if (!teamName) return `hsl(${TEAM_COLORS[0]})`;
   
-  let hash = 5381;
-  let i = teamName.length;
-
-  while(i) {
-    hash = (hash * 33) ^ teamName.charCodeAt(--i);
+  let hash = 0;
+  for (let i = 0; i < teamName.length; i++) {
+    const char = teamName.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0; // Convert to 32bit integer
   }
 
   // Ensure hash is a positive number.
-  hash = hash >>> 0;
+  hash = Math.abs(hash);
 
   const colorIndex = hash % TEAM_COLORS.length;
   return `hsl(${TEAM_COLORS[colorIndex]})`;
@@ -312,5 +313,3 @@ export function Timeline({ projects, onProjectDelete, onProjectEdit, onProjectMo
     </div>
   );
 }
-
-    

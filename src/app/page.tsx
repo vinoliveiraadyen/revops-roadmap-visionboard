@@ -15,7 +15,7 @@ import { ImportCsvDialog } from "@/components/import-csv-dialog";
 import { ExportCsvButton } from "@/components/export-csv-button";
 import { MultiSelectFilter } from "@/components/multi-select-filter";
 import { Separator } from "@/components/ui/separator";
-import { ResourceLoadChart } from "@/components/resource-load-chart";
+import { ResourceAllocationChart } from "@/components/resource-load-chart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProjectTable } from "@/components/project-table";
 
@@ -381,7 +381,7 @@ export default function Home() {
         <div className="mt-8 bg-card p-6 rounded-lg shadow-sm">
            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
               <div className="flex-1">
-                <h2 className="text-xl font-bold font-headline">Resource Load</h2>
+                <h2 className="text-xl font-bold font-headline">Resource Allocation</h2>
                 <p className="text-muted-foreground text-sm">Number of projects assigned per owner each month.</p>
               </div>
               <MultiSelectFilter
@@ -391,7 +391,7 @@ export default function Home() {
                   onSelectedValuesChange={setSelectedOwnersForChart}
               />
            </div>
-          <ResourceLoadChart projects={filteredProjects} selectedOwners={selectedOwnersForChart}/>
+          <ResourceAllocationChart projects={filteredProjects} selectedOwners={selectedOwnersForChart}/>
         </div>
 
       </main>

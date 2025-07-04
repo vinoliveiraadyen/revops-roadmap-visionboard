@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -44,7 +45,7 @@ export function MultiSelectFilter({
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-64" align="start">
+      <DropdownMenuContent className="w-64 max-h-40 overflow-y-auto" align="start">
         <DropdownMenuLabel>{`Filter by ${label}`}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {options.length > 0 ? (
