@@ -13,7 +13,7 @@ import {
 } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Users, Calendar, Briefcase, Link as LinkIcon, X, Pencil, Zap } from "lucide-react";
+import { Users, Calendar, Briefcase, Link as LinkIcon, X, Pencil, Zap, LifeBuoy } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -108,7 +108,7 @@ const TimelineProject = ({ project, year, rowIndex, onDelete, onEdit }: { projec
           }}
         >
           <p className="text-sm font-medium truncate">{project.name}</p>
-          <p className="text-xs text-muted-foreground truncate">{project.resources}</p>
+          <p className="text-xs text-muted-foreground truncate">{project.owner}</p>
         </div>
       </PopoverTrigger>
       <PopoverContent className="w-80">
@@ -168,7 +168,11 @@ const TimelineProject = ({ project, year, rowIndex, onDelete, onEdit }: { projec
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Briefcase className="h-4 w-4 flex-shrink-0" />
-              <span>{project.resources}</span>
+              <span>{project.owner}</span>
+            </div>
+             <div className="flex items-center gap-2 text-muted-foreground">
+              <LifeBuoy className="h-4 w-4 flex-shrink-0" />
+              <span>{project.support}</span>
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="h-4 w-4 flex-shrink-0" />

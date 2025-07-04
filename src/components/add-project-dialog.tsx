@@ -40,7 +40,8 @@ const projectSchema = z.object({
   impact: z.string().min(1, "Impact is required"),
   startDate: z.date({ required_error: "Start date is required." }),
   endDate: z.date({ required_error: "End date is required." }),
-  resources: z.string().min(1, "Resources are required"),
+  owner: z.string().min(1, "Owner is required"),
+  support: z.string().min(1, "Support is required"),
   dependencies: z.string().optional(),
 });
 
@@ -72,7 +73,8 @@ export function AddProjectDialog({ onSave, projectToEdit, children, open, onOpen
       epicNumber: "",
       team: "",
       impact: "",
-      resources: "",
+      owner: "",
+      support: "",
       dependencies: "",
     },
   });
@@ -91,7 +93,8 @@ export function AddProjectDialog({ onSave, projectToEdit, children, open, onOpen
           epicNumber: "",
           team: "",
           impact: "",
-          resources: "",
+          owner: "",
+          support: "",
           dependencies: "",
           startDate: undefined,
           endDate: undefined,
@@ -253,12 +256,25 @@ export function AddProjectDialog({ onSave, projectToEdit, children, open, onOpen
             </div>
             <FormField
               control={form.control}
-              name="resources"
+              name="owner"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Resources</FormLabel>
+                  <FormLabel>Owner</FormLabel>
                   <FormControl>
                     <Input placeholder="e.g., Designer, Developer" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="support"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Support</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g., IT, DevOps" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -63,10 +63,10 @@ export function ImportCsvDialog({ onProjectsAdd }: ImportCsvDialogProps) {
 
           const newProjects: Project[] = projectsToParse.map((row, index) => {
             const rowIndexForError = firstRowIsHeader ? index + 2 : index + 1;
-            const [name, epicNumber, team, impact, startDateStr, endDateStr, resources] = row;
+            const [name, epicNumber, team, impact, owner, support, dependencies, startDateStr, endDateStr] = row;
 
-            if (!name || !epicNumber || !team || !impact || !startDateStr || !endDateStr || !resources) {
-              throw new Error(`Row ${rowIndexForError} is incomplete. All 7 columns are required.`);
+            if (!name || !epicNumber || !team || !impact || !owner || !support || !dependencies || !startDateStr || !endDateStr) {
+              throw new Error(`Row ${rowIndexForError} is incomplete. All 9 columns are required.`);
             }
             
             const startDate = new Date(startDateStr);
@@ -82,10 +82,11 @@ export function ImportCsvDialog({ onProjectsAdd }: ImportCsvDialogProps) {
               epicNumber,
               team,
               impact,
+              owner,
+              support,
+              dependencies,
               startDate: format(startDate, "yyyy-MM-dd"),
               endDate: format(endDate, "yyyy-MM-dd"),
-              resources,
-              dependencies: "None",
             };
           });
 
@@ -141,9 +142,11 @@ export function ImportCsvDialog({ onProjectsAdd }: ImportCsvDialogProps) {
                     <li>Epic Number</li>
                     <li>Team</li>
                     <li>Impact</li>
+                    <li>Owner</li>
+                    <li>Support</li>
+                    <li>Dependencies</li>
                     <li>Start Date</li>
                     <li>End Date</li>
-                    <li>Resources</li>
                 </ol>
                  <p className="mt-2 text-xs">A header row is optional and will be skipped if detected.</p>
             </div>

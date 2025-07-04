@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Project } from "@/lib/types";
-import { Users, Calendar, Briefcase, Link as LinkIcon } from "lucide-react";
+import { Users, Calendar, Briefcase, Link as LinkIcon, LifeBuoy } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
 interface ProjectCardProps {
@@ -33,7 +33,11 @@ export function ProjectCard({ project, onDragStart }: ProjectCardProps) {
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Briefcase className="h-4 w-4 flex-shrink-0" />
-          <span>{project.resources}</span>
+          <span>{project.owner}</span>
+        </div>
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <LifeBuoy className="h-4 w-4 flex-shrink-0" />
+          <span>{project.support}</span>
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Calendar className="h-4 w-4 flex-shrink-0" />

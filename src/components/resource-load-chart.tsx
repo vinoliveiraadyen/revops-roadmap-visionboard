@@ -13,20 +13,24 @@ const sanitizeForCssIdentifier = (name: string) => {
     return name.replace(/[^a-zA-Z0-9]/g, '_');
 }
 
-export function ResourceLoadChart({ projects }: { projects: Project[] }) {
-    const { chartData, allResources, year } = useMemo(() => {
+export function ResourceLoadChart({ projects, selectedOwners }: { projects: Project[]; selectedOwners?: string[] }) {
+    const { chartData, ownersToDisplay, year } = useMemo(() => {
         if (!projects || projects.length === 0) {
-            return { chartData: [], allResources: [], year: new Date().getFullYear() };
+            return { chartData: [], ownersToDisplay: [], year: new Date().getFullYear() };
         }
 
-        const resourcesSet = new Set<string>();
+        const ownersSet = new Set<string>();
         projects.forEach(p => {
-            p.resources.split(',').forEach(r => {
+            p.owner.split(',').forEach(r => {
                 const trimmed = r.trim();
-                if(trimmed) resourcesSet.add(trimmed);
+                if(trimmed) ownersSet.add(trimmed);
             });
         });
-        const allResources = [...resourcesSet].sort();
+        const allOwners = [...ownersSet].sort();
+
+        const ownersToDisplay = selectedOwners && selectedOwners.length > 0 
+            ? allOwners.filter(o => selectedOwners.includes(o)) 
+            : allOwners;
 
         const firstProjectWithDate = projects.find(p => p.startDate);
         const displayYear = firstProjectWithDate ? getYear(parseISO(firstProjectWithDate.startDate)) : new Date().getFullYear();
@@ -41,9 +45,9 @@ export function ResourceLoadChart({ projects }: { projects: Project[] }) {
                 name: format(month, 'MMM'),
             };
 
-            // Initialize all sanitized resources with 0 for this month
-            allResources.forEach(resource => {
-                monthData[sanitizeForCssIdentifier(resource)] = 0;
+            // Initialize all sanitized owners with 0 for this month
+            ownersToDisplay.forEach(owner => {
+                monthData[sanitizeForCssIdentifier(owner)] = 0;
             });
 
             projects.forEach(project => {
@@ -54,11 +58,11 @@ export function ResourceLoadChart({ projects }: { projects: Project[] }) {
                     const monthEnd = endOfMonth(month);
 
                     if (projectStart <= monthEnd && projectEnd >= monthStart) {
-                        project.resources.split(',').map(r => r.trim()).forEach(resource => {
-                            if (!resource) return;
-                            const sanitizedResource = sanitizeForCssIdentifier(resource);
-                            if (monthData.hasOwnProperty(sanitizedResource)) {
-                                (monthData[sanitizedResource] as number) += 1;
+                        project.owner.split(',').map(r => r.trim()).forEach(owner => {
+                            if (!owner) return;
+                            const sanitizedOwner = sanitizeForCssIdentifier(owner);
+                            if (monthData.hasOwnProperty(sanitizedOwner)) {
+                                (monthData[sanitizedOwner] as number) += 1;
                             }
                         });
                     }
@@ -70,79 +74,65 @@ export function ResourceLoadChart({ projects }: { projects: Project[] }) {
             return monthData;
         });
 
-        return { chartData: data, allResources, year: displayYear };
-    }, [projects]);
+        return { chartData: data, ownersToDisplay, year: displayYear };
+    }, [projects, selectedOwners]);
     
     const chartConfig = useMemo(() => {
         const config: ChartConfig = {};
-        allResources.forEach((resource, index) => {
+        ownersToDisplay.forEach((owner, index) => {
             // Use the sanitized key for the config, but the original name for the label
-            config[sanitizeForCssIdentifier(resource)] = {
-                label: resource,
+            config[sanitizeForCssIdentifier(owner)] = {
+                label: owner,
                 color: `hsl(var(--chart-${(index % 5) + 1}))`,
             };
         });
         return config as ChartConfig;
-    }, [allResources]);
+    }, [ownersToDisplay]);
 
-    if (chartData.length === 0 || allResources.length === 0) {
+    if (chartData.length === 0 || ownersToDisplay.length === 0) {
         return (
-             <Card>
-                <CardHeader>
-                    <CardTitle>Resource Load - {year}</CardTitle>
-                    <CardDescription>Number of projects assigned per resource each month.</CardDescription>
-                </CardHeader>
-                <CardContent className="flex h-[300px] items-center justify-center">
-                    <p className="text-muted-foreground">
-                        No projects to display. Try adjusting filters or adding projects.
-                    </p>
-                </CardContent>
-             </Card>
+            <div className="flex h-[300px] items-center justify-center rounded-lg border border-dashed">
+                <p className="text-muted-foreground text-center p-4">
+                    No project data to display. <br/> Try adjusting filters or adding projects.
+                </p>
+            </div>
         )
     }
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Resource Load - {year}</CardTitle>
-                <CardDescription>Number of projects assigned per resource each month.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
-                    <BarChart accessibilityLayer data={chartData}>
-                        <CartesianGrid vertical={false} />
-                        <XAxis
-                            dataKey="name"
-                            tickLine={false}
-                            axisLine={false}
-                            tickMargin={8}
-                            fontSize={12}
+        <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
+            <BarChart accessibilityLayer data={chartData}>
+                <CartesianGrid vertical={false} />
+                <XAxis
+                    dataKey="name"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    fontSize={12}
+                />
+                <YAxis 
+                    tickMargin={8}
+                    allowDecimals={false}
+                    fontSize={12}
+                />
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent indicator="dot" />}
+                />
+                <ChartLegend content={<ChartLegendContent />} />
+                {ownersToDisplay.map((owner) => {
+                    const sanitizedOwner = sanitizeForCssIdentifier(owner);
+                    return (
+                        <Bar
+                            key={sanitizedOwner}
+                            dataKey={sanitizedOwner}
+                            stackId="a"
+                            fill={`var(--color-${sanitizedOwner})`}
+                            radius={[4, 4, 0, 0]}
                         />
-                        <YAxis 
-                            tickMargin={8}
-                            allowDecimals={false}
-                            fontSize={12}
-                        />
-                        <ChartTooltip
-                          cursor={false}
-                          content={<ChartTooltipContent indicator="dot" />}
-                        />
-                        <ChartLegend content={<ChartLegendContent />} />
-                        {allResources.map((resource) => {
-                            const sanitizedResource = sanitizeForCssIdentifier(resource);
-                            return (
-                                <Bar
-                                    key={sanitizedResource}
-                                    dataKey={sanitizedResource}
-                                    stackId="a"
-                                    fill={`var(--color-${sanitizedResource})`}
-                                    radius={[4, 4, 0, 0]}
-                                />
-                            )
-                        })}
-                    </BarChart>
-                </ChartContainer>
-            </CardContent>
-        </Card>
+                    )
+                })}
+            </BarChart>
+        </ChartContainer>
     );
 }

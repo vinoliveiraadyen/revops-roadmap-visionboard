@@ -19,7 +19,8 @@ const ProjectSchema = z.object({
   impact: z.string().describe('The business impact of the project (e.g., High, Medium, Low).'),
   startDate: z.string().describe('The start date of the project (ISO format).'),
   endDate: z.string().describe('The end date of the project (ISO format).'),
-  resources: z.string().describe('The resources required for the project.'),
+  owner: z.string().describe('The owner of the project.'),
+  support: z.string().describe('The support team or person for the project.'),
   dependencies: z.string().describe('The project dependencies (names of other projects).'),
 });
 
@@ -59,7 +60,8 @@ const prompt = ai.definePrompt({
     Impact: {{this.impact}}
     Start Date: {{this.startDate}}
     End Date: {{this.endDate}}
-    Resources: {{this.resources}}
+    Owner: {{this.owner}}
+    Support: {{this.support}}
     Dependencies: {{this.dependencies}}
   {{/each}}
 
