@@ -13,7 +13,7 @@ import {
 } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Users, Calendar, Briefcase, Link as LinkIcon, X, Pencil } from "lucide-react";
+import { Users, Calendar, Briefcase, Link as LinkIcon, X, Pencil, Zap } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -163,6 +163,10 @@ const TimelineProject = ({ project, year, rowIndex, onDelete, onEdit }: { projec
               </div>
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
+              <Zap className="h-4 w-4 flex-shrink-0" />
+              <span>Impact: {project.impact}</span>
+            </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
               <Briefcase className="h-4 w-4 flex-shrink-0" />
               <span>{project.resources}</span>
             </div>
@@ -286,7 +290,7 @@ export function Timeline({ projects, onProjectDelete, onProjectEdit, onProjectMo
         </div>
 
         {/* Projects */}
-        <div className="relative pt-12 h-full">
+        <div className="relative pt-16 h-full">
           {projects.map((project) => (
             <TimelineProject key={project.id} project={project} year={displayYear} rowIndex={projectRowMap.get(project.id) || 0} onDelete={onProjectDelete} onEdit={onProjectEdit} />
           ))}

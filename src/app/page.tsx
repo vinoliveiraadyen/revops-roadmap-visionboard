@@ -17,13 +17,13 @@ import { Separator } from "@/components/ui/separator";
 import { ResourceLoadChart } from "@/components/resource-load-chart";
 
 const initialProjects: Project[] = [
-    { id: 'proj-1', name: 'Initial Planning & Research', epicNumber: 'EPIC-001', team: 'Strategy', startDate: '2024-01-15', endDate: '2024-02-28', resources: 'PM, UX Researcher', dependencies: 'None' },
-    { id: 'proj-2', name: 'Develop Core Features', epicNumber: 'EPIC-002', team: 'Engineering', startDate: '2024-03-01', endDate: '2024-06-15', resources: 'Dev Team A, QA', dependencies: 'Initial Planning & Research' },
-    { id: 'proj-7', name: 'Mobile App Design', epicNumber: 'EPIC-007', team: 'Design', startDate: '2024-02-01', endDate: '2024-04-30', resources: 'UI/UX Designer', dependencies: 'Initial Planning & Research' },
-    { id: 'proj-6', name: 'API Integration', epicNumber: 'EPIC-006', team: 'Engineering', startDate: '2024-04-15', endDate: '2024-05-30', resources: 'Dev Team A', dependencies: 'Develop Core Features' },
-    { id: 'proj-3', name: 'User Testing & Feedback', epicNumber: 'EPIC-003', team: 'QA & UX', startDate: '2024-06-16', endDate: '2024-07-31', resources: 'Test Group, UX Designer', dependencies: 'Develop Core Features' },
-    { id: 'proj-4', name: 'Marketing Launch Campaign', epicNumber: 'EPIC-004', team: 'Marketing', startDate: '2024-08-01', endDate: '2024-09-15', resources: 'Marketing Team', dependencies: 'Develop Core Features' },
-    { id: 'proj-5', name: 'Q4 Feature Enhancements', epicNumber: 'EPIC-005', team: 'Engineering', startDate: '2024-10-01', endDate: '2024-11-30', resources: 'Dev Team B', dependencies: 'User Testing & Feedback' },
+    { id: 'proj-1', name: 'Initial Planning & Research', epicNumber: 'EPIC-001', team: 'Strategy', impact: 'High', startDate: '2024-01-15', endDate: '2024-02-28', resources: 'PM, UX Researcher', dependencies: 'None' },
+    { id: 'proj-2', name: 'Develop Core Features', epicNumber: 'EPIC-002', team: 'Engineering', impact: 'High', startDate: '2024-03-01', endDate: '2024-06-15', resources: 'Dev Team A, QA', dependencies: 'Initial Planning & Research' },
+    { id: 'proj-7', name: 'Mobile App Design', epicNumber: 'EPIC-007', team: 'Design', impact: 'Medium', startDate: '2024-02-01', endDate: '2024-04-30', resources: 'UI/UX Designer', dependencies: 'Initial Planning & Research' },
+    { id: 'proj-6', name: 'API Integration', epicNumber: 'EPIC-006', team: 'Engineering', impact: 'Medium', startDate: '2024-04-15', endDate: '2024-05-30', resources: 'Dev Team A', dependencies: 'Develop Core Features' },
+    { id: 'proj-3', name: 'User Testing & Feedback', epicNumber: 'EPIC-003', team: 'QA & UX', impact: 'Medium', startDate: '2024-06-16', endDate: '2024-07-31', resources: 'Test Group, UX Designer', dependencies: 'Develop Core Features' },
+    { id: 'proj-4', name: 'Marketing Launch Campaign', epicNumber: 'EPIC-004', team: 'Marketing', impact: 'High', startDate: '2024-08-01', endDate: '2024-09-15', resources: 'Marketing Team', dependencies: 'Develop Core Features' },
+    { id: 'proj-5', name: 'Q4 Feature Enhancements', epicNumber: 'EPIC-005', team: 'Engineering', impact: 'Low', startDate: '2024-10-01', endDate: '2024-11-30', resources: 'Dev Team B', dependencies: 'User Testing & Feedback' },
 ];
 
 export default function Home() {
@@ -34,11 +34,13 @@ export default function Home() {
 
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const [selectedResources, setSelectedResources] = useState<string[]>([]);
+  const [selectedImpacts, setSelectedImpacts] = useState<string[]>([]);
   
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
 
   const allTeams = useMemo(() => [...new Set(projects.map(p => p.team))].sort(), [projects]);
+  const allImpacts = useMemo(() => [...new Set(projects.map(p => p.impact))].sort(), [projects]);
   const allResources = useMemo(() => {
     const resourcesSet = new Set<string>();
     projects.forEach(p => {
@@ -50,20 +52,21 @@ export default function Home() {
     return [...resourcesSet].sort();
   }, [projects]);
   
-  const hasActiveFilters = selectedTeams.length > 0 || selectedResources.length > 0;
+  const hasActiveFilters = selectedTeams.length > 0 || selectedResources.length > 0 || selectedImpacts.length > 0;
   
   const filteredProjects = useMemo(() => {
     if (!hasActiveFilters) return projects;
 
     return projects.filter(project => {
       const teamMatch = selectedTeams.length === 0 || selectedTeams.includes(project.team);
+      const impactMatch = selectedImpacts.length === 0 || selectedImpacts.includes(project.impact);
       
       const projectResources = project.resources.split(',').map(r => r.trim()).filter(Boolean);
       const resourceMatch = selectedResources.length === 0 || projectResources.some(r => selectedResources.includes(r));
       
-      return teamMatch && resourceMatch;
+      return teamMatch && resourceMatch && impactMatch;
     });
-  }, [projects, selectedTeams, selectedResources, hasActiveFilters]);
+  }, [projects, selectedTeams, selectedResources, selectedImpacts, hasActiveFilters]);
 
   const handleProjectSave = (data: ProjectFormValues, projectId?: string) => {
     if (projectId) {
@@ -83,6 +86,7 @@ export default function Home() {
         name: data.name,
         epicNumber: data.epicNumber,
         team: data.team,
+        impact: data.impact,
         resources: data.resources,
         startDate: format(data.startDate, "yyyy-MM-dd"),
         endDate: format(data.endDate, "yyyy-MM-dd"),
@@ -193,6 +197,7 @@ export default function Home() {
   const clearFilters = () => {
     setSelectedTeams([]);
     setSelectedResources([]);
+    setSelectedImpacts([]);
   }
   
   return (
@@ -255,6 +260,12 @@ export default function Home() {
                     options={allTeams}
                     selectedValues={selectedTeams}
                     onSelectedValuesChange={setSelectedTeams}
+                />
+                 <MultiSelectFilter
+                    label="Impact"
+                    options={allImpacts}
+                    selectedValues={selectedImpacts}
+                    onSelectedValuesChange={setSelectedImpacts}
                 />
                 <MultiSelectFilter
                     label="Resources"

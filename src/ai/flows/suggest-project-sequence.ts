@@ -16,6 +16,7 @@ const ProjectSchema = z.object({
   name: z.string().describe('The name of the project.'),
   epicNumber: z.string().describe('The epic number associated with the project.'),
   team: z.string().describe('The team responsible for the project.'),
+  impact: z.string().describe('The business impact of the project (e.g., High, Medium, Low).'),
   startDate: z.string().describe('The start date of the project (ISO format).'),
   endDate: z.string().describe('The end date of the project (ISO format).'),
   resources: z.string().describe('The resources required for the project.'),
@@ -55,6 +56,7 @@ const prompt = ai.definePrompt({
   - Name: {{this.name}}
     Epic Number: {{this.epicNumber}}
     Team: {{this.team}}
+    Impact: {{this.impact}}
     Start Date: {{this.startDate}}
     End Date: {{this.endDate}}
     Resources: {{this.resources}}

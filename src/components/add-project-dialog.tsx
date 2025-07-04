@@ -37,6 +37,7 @@ const projectSchema = z.object({
   name: z.string().min(1, "Project name is required"),
   epicNumber: z.string().min(1, "Epic number is required"),
   team: z.string().min(1, "Team name is required"),
+  impact: z.string().min(1, "Impact is required"),
   startDate: z.date({ required_error: "Start date is required." }),
   endDate: z.date({ required_error: "End date is required." }),
   resources: z.string().min(1, "Resources are required"),
@@ -70,6 +71,7 @@ export function AddProjectDialog({ onSave, projectToEdit, children, open, onOpen
       name: "",
       epicNumber: "",
       team: "",
+      impact: "",
       resources: "",
       dependencies: "",
     },
@@ -88,6 +90,7 @@ export function AddProjectDialog({ onSave, projectToEdit, children, open, onOpen
           name: "",
           epicNumber: "",
           team: "",
+          impact: "",
           resources: "",
           dependencies: "",
           startDate: undefined,
@@ -127,8 +130,7 @@ export function AddProjectDialog({ onSave, projectToEdit, children, open, onOpen
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
+             <FormField
                 control={form.control}
                 name="epicNumber"
                 render={({ field }) => (
@@ -141,6 +143,7 @@ export function AddProjectDialog({ onSave, projectToEdit, children, open, onOpen
                   </FormItem>
                 )}
               />
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="team"
@@ -149,6 +152,19 @@ export function AddProjectDialog({ onSave, projectToEdit, children, open, onOpen
                     <FormLabel>Team</FormLabel>
                     <FormControl>
                       <Input placeholder="e.g., Marketing" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="impact"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Impact</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., High, Medium, Low" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
