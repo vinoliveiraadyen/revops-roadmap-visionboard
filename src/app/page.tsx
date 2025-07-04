@@ -94,21 +94,31 @@ export default function Home() {
     if (!hasActiveFilters) return projects;
 
     return projects.filter(project => {
-      const teamMatch = selectedTeams.length === 0 || selectedTeams.includes(project.team);
-      
-      const projectImpacts = project.impact.split(',').map(i => i.trim()).filter(Boolean);
-      const impactMatch = selectedImpacts.length === 0 || projectImpacts.some(i => selectedImpacts.includes(i));
-      
-      const projectOwners = project.owner.split(',').map(r => r.trim()).filter(Boolean);
-      const ownerMatch = selectedOwners.length === 0 || projectOwners.some(r => selectedOwners.includes(r));
+      // With OR logic, a project is included if it matches ANY of the active filter criteria.
+      const conditions = [];
 
-      const projectSupport = project.support.split(',').map(s => s.trim()).filter(Boolean);
-      const supportMatch = selectedSupport.length === 0 || projectSupport.some(s => selectedSupport.includes(s));
-
-      const projectDependencies = project.dependencies.split(',').map(d => d.trim()).filter(Boolean);
-      const dependenciesMatch = selectedDependencies.length === 0 || projectDependencies.some(d => selectedDependencies.includes(d));
+      if (selectedTeams.length > 0) {
+        conditions.push(selectedTeams.includes(project.team));
+      }
+      if (selectedImpacts.length > 0) {
+        const projectImpacts = project.impact.split(',').map(i => i.trim()).filter(Boolean);
+        conditions.push(projectImpacts.some(i => selectedImpacts.includes(i)));
+      }
+      if (selectedOwners.length > 0) {
+        const projectOwners = project.owner.split(',').map(r => r.trim()).filter(Boolean);
+        conditions.push(projectOwners.some(r => selectedOwners.includes(r)));
+      }
+      if (selectedSupport.length > 0) {
+        const projectSupport = project.support.split(',').map(s => s.trim()).filter(Boolean);
+        conditions.push(projectSupport.some(s => selectedSupport.includes(s)));
+      }
+      if (selectedDependencies.length > 0) {
+        const projectDependencies = project.dependencies.split(',').map(d => d.trim()).filter(Boolean);
+        conditions.push(projectDependencies.some(d => selectedDependencies.includes(d)));
+      }
       
-      return teamMatch && ownerMatch && impactMatch && supportMatch && dependenciesMatch;
+      // A project matches if any of its attributes pass an active filter.
+      return conditions.some(c => c === true);
     });
   }, [projects, selectedTeams, selectedOwners, selectedImpacts, selectedSupport, selectedDependencies, hasActiveFilters]);
 

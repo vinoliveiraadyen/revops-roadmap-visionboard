@@ -35,14 +35,18 @@ const getDaysInYear = (date: Date) => {
 };
 
 const TEAM_COLORS = [
-  "207 82% 68%", // blueish (primary)
-  "12 76% 61%",  // orange (chart-1)
-  "150 83% 68%", // greenish (accent)
-  "280 65% 60%", // purple (chart-4 dark)
-  "43 74% 66%",  // yellow (chart-4)
-  "340 75% 55%", // pinkish (chart-5 dark)
-  "173 58% 39%", // dark green (chart-2)
-  "27 87% 67%",  // light orange (chart-5)
+  "207 82% 68%", // Primary Blue
+  "150 83% 68%", // Accent Green
+  "43 93% 77%",  // Chart-3 Yellow
+  "10 93% 80%",  // Chart-4 Orange
+  "330 93% 82%", // Chart-5 Pink
+  "173 58% 39%", // Darker Green
+  "260 85% 70%", // Purple
+  "198 93% 79%", // Chart-1 Cyan
+  "350 88% 75%", // Reddish
+  "220 80% 75%", // Indigo
+  "60 85% 65%",  // Lime Green
+  "30 90% 68%",  // Brownish Orange
 ];
 
 const getTeamColor = (teamName: string): string => {
