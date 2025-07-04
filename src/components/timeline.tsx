@@ -13,7 +13,7 @@ import {
 } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Users, Calendar, Briefcase, Link as LinkIcon, X, Pencil, Zap, LifeBuoy } from "lucide-react";
+import { Users, Calendar, Briefcase, Link as LinkIcon, Trash2, Pencil, Zap, LifeBuoy } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -119,8 +119,8 @@ const TimelineProject = ({ project, year, rowIndex, onDelete, onEdit }: { projec
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive">
-                  <X className="h-4 w-4" />
+              <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive">
+                  <Trash2 className="h-4 w-4" />
                   <span className="sr-only">Delete Project</span>
               </Button>
             </AlertDialogTrigger>
