@@ -41,7 +41,16 @@ export default function Home() {
   const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
 
   const allTeams = useMemo(() => [...new Set(projects.map(p => p.team))].sort(), [projects]);
-  const allImpacts = useMemo(() => [...new Set(projects.map(p => p.impact))].sort(), [projects]);
+  const allImpacts = useMemo(() => {
+    const impactsSet = new Set<string>();
+    projects.forEach(p => {
+        p.impact.split(',').forEach(i => {
+            const trimmed = i.trim();
+            if(trimmed) impactsSet.add(trimmed);
+        });
+    });
+    return [...impactsSet].sort();
+  }, [projects]);
   const allResources = useMemo(() => {
     const resourcesSet = new Set<string>();
     projects.forEach(p => {
@@ -60,7 +69,9 @@ export default function Home() {
 
     return projects.filter(project => {
       const teamMatch = selectedTeams.length === 0 || selectedTeams.includes(project.team);
-      const impactMatch = selectedImpacts.length === 0 || selectedImpacts.includes(project.impact);
+      
+      const projectImpacts = project.impact.split(',').map(i => i.trim()).filter(Boolean);
+      const impactMatch = selectedImpacts.length === 0 || projectImpacts.some(i => selectedImpacts.includes(i));
       
       const projectResources = project.resources.split(',').map(r => r.trim()).filter(Boolean);
       const resourceMatch = selectedResources.length === 0 || projectResources.some(r => selectedResources.includes(r));
