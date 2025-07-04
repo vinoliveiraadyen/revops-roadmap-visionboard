@@ -16,6 +16,8 @@ import { ExportCsvButton } from "@/components/export-csv-button";
 import { MultiSelectFilter } from "@/components/multi-select-filter";
 import { Separator } from "@/components/ui/separator";
 import { ResourceLoadChart } from "@/components/resource-load-chart";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ProjectTable } from "@/components/project-table";
 
 const initialProjects: Project[] = [
     { id: 'proj-1', name: 'Initial Planning & Research', epicNumber: 'EPIC-001', team: 'Strategy', impact: 'High', startDate: '2024-01-15', endDate: '2024-02-28', owner: 'PM, UX Researcher', support: 'IT', dependencies: 'None' },
@@ -349,7 +351,19 @@ export default function Home() {
           </div>
         </div>
         
-        <Timeline projects={filteredProjects} onProjectDelete={handleProjectDelete} onProjectEdit={handleProjectEdit} onProjectMove={handleProjectMove} />
+        <Tabs defaultValue="timeline" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-4 md:w-[400px]">
+            <TabsTrigger value="timeline">Timeline View</TabsTrigger>
+            <TabsTrigger value="table">Table View</TabsTrigger>
+          </TabsList>
+          <TabsContent value="timeline">
+            <Timeline projects={filteredProjects} onProjectDelete={handleProjectDelete} onProjectEdit={handleProjectEdit} onProjectMove={handleProjectMove} />
+          </TabsContent>
+          <TabsContent value="table">
+            <ProjectTable projects={filteredProjects} onProjectEdit={handleProjectEdit} onProjectDelete={handleProjectDelete} />
+          </TabsContent>
+        </Tabs>
+
 
         <div className="mt-8 bg-card p-6 rounded-lg shadow-sm">
            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
