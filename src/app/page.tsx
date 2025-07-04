@@ -12,6 +12,7 @@ import { getOptimalSequence } from "@/app/actions";
 import { Lightbulb, Loader2, Upload, Plus } from "lucide-react";
 import { format, parseISO, differenceInDays, addDays } from "date-fns";
 import { ImportCsvDialog } from "@/components/import-csv-dialog";
+import { ExportCsvButton } from "@/components/export-csv-button";
 import { MultiSelectFilter } from "@/components/multi-select-filter";
 import { Separator } from "@/components/ui/separator";
 import { ResourceLoadChart } from "@/components/resource-load-chart";
@@ -234,12 +235,17 @@ export default function Home() {
             </div>
             <div className="flex flex-col gap-4 w-full md:w-auto pt-0 md:pt-8">
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <AddProjectDialog onSave={handleProjectSave}>
-                    <Button>
-                      <Plus className="mr-2 h-4 w-4" /> Add Project
-                    </Button>
-                  </AddProjectDialog>
-                  <ImportCsvDialog onProjectsAdd={handleCsvImport} />
+                  <div className="flex-grow">
+                    <AddProjectDialog onSave={handleProjectSave}>
+                      <Button className="w-full">
+                        <Plus className="mr-2 h-4 w-4" /> Add Project
+                      </Button>
+                    </AddProjectDialog>
+                  </div>
+                  <div className="flex-grow flex flex-col gap-2">
+                    <ImportCsvDialog onProjectsAdd={handleCsvImport} />
+                    <ExportCsvButton projects={projects} />
+                  </div>
                 </div>
                 <Button onClick={handleOptimize} disabled={isPending || projects.length === 0} className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
                 {isPending ? (
