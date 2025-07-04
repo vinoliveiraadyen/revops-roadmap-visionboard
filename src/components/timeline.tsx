@@ -49,25 +49,7 @@ const TEAM_COLORS = [
   "300 80% 65%", // Magenta
 ];
 
-const getTeamColor = (teamName: string): string => {
-  if (!teamName) return `hsl(${TEAM_COLORS[0]})`;
-  
-  let hash = 0;
-  for (let i = 0; i < teamName.length; i++) {
-    const char = teamName.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash |= 0; // Convert to 32bit integer
-  }
-
-  // Ensure hash is a positive number.
-  hash = Math.abs(hash);
-
-  const colorIndex = hash % TEAM_COLORS.length;
-  return `hsl(${TEAM_COLORS[colorIndex]})`;
-};
-
-
-const TimelineProject = ({ project, year, rowIndex, onDelete, onEdit }: { project: Project; year: number; rowIndex: number; onDelete: (projectId: string) => void; onEdit: (project: Project) => void; }) => {
+const TimelineProject = ({ project, year, rowIndex, onDelete, onEdit, getTeamColor }: { project: Project; year: number; rowIndex: number; onDelete: (projectId: string) => void; onEdit: (project: Project) => void; getTeamColor: (teamName: string) => string; }) => {
   const [popoverOpen, setPopoverOpen] = React.useState(false);
   const projectStart = parseISO(project.startDate);
   const projectEnd = parseISO(project.endDate);
@@ -257,6 +239,19 @@ export function Timeline({ projects, onProjectDelete, onProjectEdit, onProjectMo
   const { projectRowMap, rowCount } = getProjectRows(projects, displayYear);
   const timelineHeight = (rowCount * 3.5) + 9.5; // 3.5rem per row + padding
 
+  const teamColorMap = React.useMemo(() => {
+    const uniqueTeams = [...new Set(projects.map(p => p.team).filter(Boolean))].sort();
+    const map = new Map<string, string>();
+    uniqueTeams.forEach((team, index) => {
+      map.set(team, `hsl(${TEAM_COLORS[index % TEAM_COLORS.length]})`);
+    });
+    return map;
+  }, [projects]);
+
+  const getTeamColor = (teamName: string): string => {
+    return teamColorMap.get(teamName) || `hsl(${TEAM_COLORS[0]})`;
+  };
+
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const projectId = e.dataTransfer.getData("projectId");
@@ -306,7 +301,7 @@ export function Timeline({ projects, onProjectDelete, onProjectEdit, onProjectMo
         {/* Projects */}
         <div className="relative pt-16 h-full">
           {projects.map((project) => (
-            <TimelineProject key={project.id} project={project} year={displayYear} rowIndex={projectRowMap.get(project.id) || 0} onDelete={onProjectDelete} onEdit={onProjectEdit} />
+            <TimelineProject key={project.id} project={project} year={displayYear} rowIndex={projectRowMap.get(project.id) || 0} onDelete={onProjectDelete} onEdit={onProjectEdit} getTeamColor={getTeamColor} />
           ))}
         </div>
       </div>
