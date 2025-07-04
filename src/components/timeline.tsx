@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -51,12 +50,18 @@ const TEAM_COLORS = [
 
 const getTeamColor = (teamName: string): string => {
   if (!teamName) return `hsl(${TEAM_COLORS[0]})`;
-  let hash = 0;
-  for (let i = 0; i < teamName.length; i++) {
-    hash = teamName.charCodeAt(i) + ((hash << 5) - hash);
-    hash |= 0; // Convert to 32bit integer
+  
+  let hash = 5381;
+  let i = teamName.length;
+
+  while(i) {
+    hash = (hash * 33) ^ teamName.charCodeAt(--i);
   }
-  const colorIndex = Math.abs(hash % TEAM_COLORS.length);
+
+  // Ensure hash is a positive number.
+  hash = hash >>> 0;
+
+  const colorIndex = hash % TEAM_COLORS.length;
   return `hsl(${TEAM_COLORS[colorIndex]})`;
 };
 
@@ -307,3 +312,5 @@ export function Timeline({ projects, onProjectDelete, onProjectEdit, onProjectMo
     </div>
   );
 }
+
+    
