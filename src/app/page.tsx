@@ -46,46 +46,40 @@ export default function Home() {
   
   const [selectedOwnersForChart, setSelectedOwnersForChart] = useState<string[]>([]);
 
-  const allTeams = useMemo(() => [...new Set(projects.map(p => p.team))].sort(), [projects]);
-  const allImpacts = useMemo(() => {
+  const { allTeams, allImpacts, allOwners, allSupport, allDependencies } = useMemo(() => {
+    const teamsSet = new Set<string>();
     const impactsSet = new Set<string>();
-    projects.forEach(p => {
-        p.impact.split(',').forEach(i => {
-            const trimmed = i.trim();
-            if(trimmed) impactsSet.add(trimmed);
-        });
-    });
-    return [...impactsSet].sort();
-  }, [projects]);
-  const allOwners = useMemo(() => {
     const ownersSet = new Set<string>();
-    projects.forEach(p => {
-        p.owner.split(',').forEach(r => {
-            const trimmed = r.trim();
-            if(trimmed) ownersSet.add(trimmed);
-        });
-    });
-    return [...ownersSet].sort();
-  }, [projects]);
-  const allSupport = useMemo(() => {
     const supportSet = new Set<string>();
-    projects.forEach(p => {
-      p.support.split(',').forEach(s => {
+    const dependenciesSet = new Set<string>();
+
+    for (const project of projects) {
+      if (project.team) teamsSet.add(project.team);
+      project.impact?.split(',').forEach(i => {
+        const trimmed = i.trim();
+        if (trimmed) impactsSet.add(trimmed);
+      });
+      project.owner?.split(',').forEach(o => {
+        const trimmed = o.trim();
+        if (trimmed) ownersSet.add(trimmed);
+      });
+      project.support?.split(',').forEach(s => {
         const trimmed = s.trim();
         if (trimmed) supportSet.add(trimmed);
       });
-    });
-    return [...supportSet].sort();
-  }, [projects]);
-  const allDependencies = useMemo(() => {
-    const dependenciesSet = new Set<string>();
-    projects.forEach(p => {
-      p.dependencies.split(',').forEach(d => {
+      project.dependencies?.split(',').forEach(d => {
         const trimmed = d.trim();
         if (trimmed && trimmed.toLowerCase() !== 'none') dependenciesSet.add(trimmed);
       });
-    });
-    return [...dependenciesSet].sort();
+    }
+
+    return {
+      allTeams: [...teamsSet].sort(),
+      allImpacts: [...impactsSet].sort(),
+      allOwners: [...ownersSet].sort(),
+      allSupport: [...supportSet].sort(),
+      allDependencies: [...dependenciesSet].sort(),
+    };
   }, [projects]);
   
   const hasActiveFilters = selectedTeams.length > 0 || selectedOwners.length > 0 || selectedImpacts.length > 0 || selectedSupport.length > 0 || selectedDependencies.length > 0;

@@ -236,7 +236,9 @@ export function Timeline({ projects, onProjectDelete, onProjectEdit, onProjectMo
   const displayYear = allYears.length > 0 ? allYears[0] : new Date().getFullYear();
   
   const months = Array.from({ length: 12 }, (_, i) => format(new Date(displayYear, i, 1), "MMM"));
-  const { projectRowMap, rowCount } = getProjectRows(projects, displayYear);
+  
+  const { projectRowMap, rowCount } = React.useMemo(() => getProjectRows(projects, displayYear), [projects, displayYear]);
+
   const timelineHeight = (rowCount * 3.5) + 9.5; // 3.5rem per row + padding
 
   const teamColorMap = React.useMemo(() => {
@@ -248,9 +250,9 @@ export function Timeline({ projects, onProjectDelete, onProjectEdit, onProjectMo
     return map;
   }, [projects]);
 
-  const getTeamColor = (teamName: string): string => {
+  const getTeamColor = React.useCallback((teamName: string): string => {
     return teamColorMap.get(teamName) || `hsl(${TEAM_COLORS[0]})`;
-  };
+  }, [teamColorMap]);
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
