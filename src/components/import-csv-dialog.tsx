@@ -65,8 +65,8 @@ export function ImportCsvDialog({ onProjectsAdd }: ImportCsvDialogProps) {
             const rowIndexForError = firstRowIsHeader ? index + 2 : index + 1;
             const [name, epicNumber, team, impact, owner, support, dependencies, startDateStr, endDateStr] = row;
 
-            if (!name || !epicNumber || !team || !impact || !owner || !support || !dependencies || !startDateStr || !endDateStr) {
-              throw new Error(`Row ${rowIndexForError} is incomplete. All 9 columns are required.`);
+            if (!name || !epicNumber || !team || !startDateStr || !endDateStr) {
+              throw new Error(`Row ${rowIndexForError} is incomplete. Project Name, Epic Number, Team, Start Date, and End Date are required.`);
             }
             
             const startDate = new Date(startDateStr);
@@ -81,10 +81,10 @@ export function ImportCsvDialog({ onProjectsAdd }: ImportCsvDialogProps) {
               name,
               epicNumber,
               team,
-              impact,
-              owner,
-              support,
-              dependencies,
+              impact: impact || "",
+              owner: owner || "",
+              support: support || "",
+              dependencies: dependencies || "",
               startDate: format(startDate, "yyyy-MM-dd"),
               endDate: format(endDate, "yyyy-MM-dd"),
             };

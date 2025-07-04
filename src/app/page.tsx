@@ -20,7 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProjectTable } from "@/components/project-table";
 
 const initialProjects: Project[] = [
-    { id: 'proj-1', name: 'Initial Planning & Research', epicNumber: 'EPIC-001', team: 'Strategy', impact: 'High', startDate: '2024-01-15', endDate: '2024-02-28', owner: 'PM, UX Researcher', support: 'IT', dependencies: 'None' },
+    { id: 'proj-1', name: 'Initial Planning & Research', epicNumber: 'EPIC-001', team: 'Strategy', impact: 'High', startDate: '2024-01-15', endDate: '2024-02-28', owner: 'PM, UX Researcher', support: 'IT', dependencies: '' },
     { id: 'proj-2', name: 'Develop Core Features', epicNumber: 'EPIC-002', team: 'Engineering', impact: 'High', startDate: '2024-03-01', endDate: '2024-06-15', owner: 'Dev Team A, QA', support: 'Architecture', dependencies: 'Initial Planning & Research' },
     { id: 'proj-7', name: 'Mobile App Design', epicNumber: 'EPIC-007', team: 'Design', impact: 'Medium', startDate: '2024-02-01', endDate: '2024-04-30', owner: 'UI/UX Designer', support: 'Design System Team', dependencies: 'Initial Planning & Research' },
     { id: 'proj-6', name: 'API Integration', epicNumber: 'EPIC-006', team: 'Engineering', impact: 'Medium', startDate: '2024-04-15', endDate: '2024-05-30', owner: 'Dev Team A', support: 'DevOps', dependencies: 'Develop Core Features' },
@@ -120,7 +120,10 @@ export default function Home() {
         ...data,
         startDate: format(data.startDate, "yyyy-MM-dd"),
         endDate: format(data.endDate, "yyyy-MM-dd"),
-        dependencies: data.dependencies || "None",
+        impact: data.impact || "",
+        owner: data.owner || "",
+        support: data.support || "",
+        dependencies: data.dependencies || "",
       } : p));
       toast({ title: "Project Updated", description: `"${data.name}" has been successfully updated.` });
     } else {
@@ -130,12 +133,12 @@ export default function Home() {
         name: data.name,
         epicNumber: data.epicNumber,
         team: data.team,
-        impact: data.impact,
-        owner: data.owner,
-        support: data.support,
+        impact: data.impact || "",
+        owner: data.owner || "",
+        support: data.support || "",
         startDate: format(data.startDate, "yyyy-MM-dd"),
         endDate: format(data.endDate, "yyyy-MM-dd"),
-        dependencies: data.dependencies || "None",
+        dependencies: data.dependencies || "",
       };
       setProjects(prev => [...prev, newProject]);
       toast({ title: "Project Added", description: `"${data.name}" has been successfully created.` });

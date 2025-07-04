@@ -37,11 +37,11 @@ const projectSchema = z.object({
   name: z.string().min(1, "Project name is required"),
   epicNumber: z.string().min(1, "Epic number is required"),
   team: z.string().min(1, "Team name is required"),
-  impact: z.string().min(1, "Impact is required"),
+  impact: z.string().optional(),
   startDate: z.date({ required_error: "Start date is required." }),
   endDate: z.date({ required_error: "End date is required." }),
-  owner: z.string().min(1, "Owner is required"),
-  support: z.string().min(1, "Support is required"),
+  owner: z.string().optional(),
+  support: z.string().optional(),
   dependencies: z.string().optional(),
 });
 
