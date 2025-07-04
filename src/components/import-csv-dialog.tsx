@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -50,7 +51,8 @@ export function ImportCsvDialog({ onProjectsAdd }: ImportCsvDialogProps) {
           const firstRowIsHeader = dataRows[0].some(cell => 
               /project name/i.test(cell) ||
               /epic number/i.test(cell) ||
-              /team/i.test(cell)
+              /team/i.test(cell) ||
+              /impact/i.test(cell)
           );
 
           const projectsToParse = firstRowIsHeader ? dataRows.slice(1) : dataRows;
@@ -61,10 +63,10 @@ export function ImportCsvDialog({ onProjectsAdd }: ImportCsvDialogProps) {
 
           const newProjects: Project[] = projectsToParse.map((row, index) => {
             const rowIndexForError = firstRowIsHeader ? index + 2 : index + 1;
-            const [name, epicNumber, team, startDateStr, endDateStr, resources] = row;
+            const [name, epicNumber, team, impact, startDateStr, endDateStr, resources] = row;
 
-            if (!name || !epicNumber || !team || !startDateStr || !endDateStr || !resources) {
-              throw new Error(`Row ${rowIndexForError} is incomplete. All 6 columns are required.`);
+            if (!name || !epicNumber || !team || !impact || !startDateStr || !endDateStr || !resources) {
+              throw new Error(`Row ${rowIndexForError} is incomplete. All 7 columns are required.`);
             }
             
             const startDate = new Date(startDateStr);
@@ -79,6 +81,7 @@ export function ImportCsvDialog({ onProjectsAdd }: ImportCsvDialogProps) {
               name,
               epicNumber,
               team,
+              impact,
               startDate: format(startDate, "yyyy-MM-dd"),
               endDate: format(endDate, "yyyy-MM-dd"),
               resources,
@@ -137,6 +140,7 @@ export function ImportCsvDialog({ onProjectsAdd }: ImportCsvDialogProps) {
                     <li>Project Name</li>
                     <li>Epic Number</li>
                     <li>Team</li>
+                    <li>Impact</li>
                     <li>Start Date</li>
                     <li>End Date</li>
                     <li>Resources</li>
