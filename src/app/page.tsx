@@ -392,11 +392,6 @@ export default function Home() {
                     <Button variant="outline" className="w-full sm:w-auto justify-start">
                       <ListFilter className="mr-2 h-4 w-4" />
                       <span>Year</span>
-                      {selectedYear && (
-                        <span className="ml-2 rounded-md bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
-                          {selectedYear}
-                        </span>
-                      )}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-40" align="start">
