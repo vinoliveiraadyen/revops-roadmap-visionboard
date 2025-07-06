@@ -97,42 +97,60 @@ export default function Home() {
   
   useEffect(() => {
     if (allYears.length > 0 && !allYears.includes(selectedYear)) {
-      setSelectedYear(allYears[0]);
+      setSelectedYear(allYears[0] || new Date().getFullYear());
     }
   }, [allYears, selectedYear]);
 
   const hasActiveFilters = selectedTeams.length > 0 || selectedOwners.length > 0 || selectedImpacts.length > 0 || selectedSupport.length > 0 || selectedDependencies.length > 0;
   
   const filteredProjects = useMemo(() => {
-    if (!hasActiveFilters) return projects;
-
     return projects.filter(project => {
-      const conditions = [];
+        // Year filter (AND condition)
+        let isYearMatch = false;
+        try {
+            const startYear = getYear(parseISO(project.startDate));
+            const endYear = getYear(parseISO(project.endDate));
+            if (startYear <= selectedYear && endYear >= selectedYear) {
+                isYearMatch = true;
+            }
+        } catch (e) {
+            isYearMatch = false; // Ignore projects with invalid dates for filtering
+        }
 
-      if (selectedTeams.length > 0) {
-        conditions.push(selectedTeams.includes(project.team));
-      }
-      if (selectedImpacts.length > 0) {
-        const projectImpacts = (project.impact || "").split(',').map(i => i.trim()).filter(Boolean);
-        conditions.push(projectImpacts.some(i => selectedImpacts.includes(i)));
-      }
-      if (selectedOwners.length > 0) {
-        const projectOwners = (project.owner || "").split(',').map(r => r.trim()).filter(Boolean);
-        conditions.push(projectOwners.some(r => selectedOwners.includes(r)));
-      }
-      if (selectedSupport.length > 0) {
-        const projectSupport = (project.support || "").split(',').map(s => s.trim()).filter(Boolean);
-        conditions.push(projectSupport.some(s => selectedSupport.includes(s)));
-      }
-      if (selectedDependencies.length > 0) {
-        const projectDependencies = (project.dependencies || "").split(',').map(d => d.trim()).filter(Boolean);
-        conditions.push(projectDependencies.some(d => selectedDependencies.includes(d)));
-      }
-      
-      if (conditions.length === 0) return true;
-      return conditions.some(c => c === true);
+        if (!isYearMatch) {
+            return false;
+        }
+
+        // Other filters (OR condition)
+        if (!hasActiveFilters) {
+            return true; // No other filters active, so if year matches, include it
+        }
+
+        const conditions = [];
+
+        if (selectedTeams.length > 0) {
+            conditions.push(selectedTeams.includes(project.team));
+        }
+        if (selectedImpacts.length > 0) {
+            const projectImpacts = (project.impact || "").split(',').map(i => i.trim()).filter(Boolean);
+            conditions.push(projectImpacts.some(i => selectedImpacts.includes(i)));
+        }
+        if (selectedOwners.length > 0) {
+            const projectOwners = (project.owner || "").split(',').map(r => r.trim()).filter(Boolean);
+            conditions.push(projectOwners.some(r => selectedOwners.includes(r)));
+        }
+        if (selectedSupport.length > 0) {
+            const projectSupport = (project.support || "").split(',').map(s => s.trim()).filter(Boolean);
+            conditions.push(projectSupport.some(s => selectedSupport.includes(s)));
+        }
+        if (selectedDependencies.length > 0) {
+            const projectDependencies = (project.dependencies || "").split(',').map(d => d.trim()).filter(Boolean);
+            conditions.push(projectDependencies.some(d => selectedDependencies.includes(d)));
+        }
+        
+        return conditions.some(c => c === true);
     });
-  }, [projects, selectedTeams, selectedOwners, selectedImpacts, selectedSupport, selectedDependencies, hasActiveFilters]);
+  }, [projects, selectedYear, selectedTeams, selectedOwners, selectedImpacts, selectedSupport, selectedDependencies, hasActiveFilters]);
 
   const handleProjectSave = (data: ProjectFormValues, projectId?: string) => {
     if (projectId) {
@@ -217,7 +235,7 @@ export default function Home() {
   };
 
   const handleOptimize = () => {
-    const projectsToOptimize = hasActiveFilters ? filteredProjects : projects;
+    const projectsToOptimize = filteredProjects;
 
     if (projectsToOptimize.length === 0) {
       toast({
@@ -318,7 +336,7 @@ export default function Home() {
                     ) : (
                         <Lightbulb className="mr-2 h-4 w-4" />
                     )}
-                    Optimize {hasActiveFilters ? `${filteredProjects.length} ` : ''}with AI
+                    Optimize {filteredProjects.length > 0 && hasActiveFilters ? `${filteredProjects.length} ` : ''}with AI
                     </Button>
                   </div>
                   <div className="flex-grow flex flex-col gap-2">
@@ -332,6 +350,19 @@ export default function Home() {
           <div>
             <div className="flex flex-wrap items-center gap-4">
                 <h3 className="text-lg font-semibold font-headline">Filters</h3>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="year-select">Year</Label>
+                  <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(Number(value))}>
+                    <SelectTrigger id="year-select" className="w-[120px]">
+                      <SelectValue placeholder="Select year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allYears.map(year => (
+                        <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <MultiSelectFilter
                     label="Teams"
                     options={allTeams}
@@ -368,7 +399,7 @@ export default function Home() {
                     </Button>
                 )}
             </div>
-            {hasActiveFilters && (
+            {(hasActiveFilters || selectedYear !== new Date().getFullYear()) && (
                 <div className="mt-4 text-sm text-muted-foreground">
                     Showing {filteredProjects.length} of {projects.length} projects.
                 </div>
@@ -382,19 +413,6 @@ export default function Home() {
             <TabsTrigger value="table">Table View</TabsTrigger>
           </TabsList>
           <TabsContent value="timeline">
-            <div className="flex items-center gap-2 mb-4">
-              <Label htmlFor="year-select">Year</Label>
-              <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(Number(value))}>
-                <SelectTrigger id="year-select" className="w-[120px]">
-                  <SelectValue placeholder="Select year" />
-                </SelectTrigger>
-                <SelectContent>
-                  {allYears.map(year => (
-                    <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
             <Timeline 
               projects={filteredProjects} 
               onProjectDelete={handleProjectDelete} 
