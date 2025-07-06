@@ -255,7 +255,7 @@ export function Timeline({ projects, onProjectDelete, onProjectEdit, onProjectMo
     
     // Convert drop position to a day of the year
     const dropX = e.clientX - timelineRect.left;
-    const newVisualStartX = Math.max(0, Math.min(timelineRect.width, dropX - offsetInPixels));
+    const newVisualStartX = dropX - offsetInPixels;
     const totalDaysInYear = getDaysInYear(new Date(displayYear, 0, 1));
     const newVisualStartDay = Math.round((newVisualStartX / timelineRect.width) * totalDaysInYear);
 
