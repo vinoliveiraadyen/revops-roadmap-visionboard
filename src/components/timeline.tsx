@@ -5,7 +5,7 @@ import * as React from "react";
 import type { Project } from "@/lib/types";
 import {
   startOfYear,
-  differenceInDays,
+  differenceInCalendarDays,
   parseISO,
   format,
   getYear,
@@ -35,18 +35,18 @@ const getDaysInYear = (date: Date) => {
 };
 
 const TEAM_COLORS = [
-  "210 90% 60%", // Bright Blue
-  "3 90% 60%",   // Bright Red
+  "210 90% 55%", // Bright Blue
+  "340 85% 60%", // Bright Red-Pink
   "145 70% 45%", // Strong Green
   "35 95% 55%",  // Bright Orange
   "265 80% 65%", // Vibrant Purple
-  "330 85% 60%", // Bright Pink
   "190 85% 50%", // Teal
-  "50 95% 55%",  // Gold
+  "50 100% 55%", // Gold
   "280 70% 60%", // Indigo
-  "0 80% 55%",   // Strong Red
+  "0 80% 60%",   // Strong Red
   "170 75% 45%", // Sea Green
   "300 80% 65%", // Magenta
+  "25 90% 50%",  // Brownish Orange
 ];
 
 const TimelineProject = ({ project, year, rowIndex, onDelete, onEdit, getTeamColor }: { project: Project; year: number; rowIndex: number; onDelete: (projectId: string) => void; onEdit: (project: Project) => void; getTeamColor: (teamName: string) => string; }) => {
@@ -59,8 +59,8 @@ const TimelineProject = ({ project, year, rowIndex, onDelete, onEdit, getTeamCol
   const yearStartDate = startOfYear(new Date(year, 0, 1));
   const totalDays = getDaysInYear(yearStartDate);
 
-  const startDay = differenceInDays(projectStart, yearStartDate);
-  const duration = differenceInDays(projectEnd, projectStart) + 1;
+  const startDay = differenceInCalendarDays(projectStart, yearStartDate);
+  const duration = differenceInCalendarDays(projectEnd, projectStart) + 1;
   
   const clampedStartDay = Math.max(0, startDay);
   const clampedEndDay = Math.min(totalDays, startDay + duration);
@@ -236,6 +236,7 @@ export function Timeline({ projects, onProjectDelete, onProjectEdit, onProjectMo
     return map;
   }, [projects]);
 
+
   const getTeamColor = React.useCallback((teamName: string): string => {
     return teamColorMap.get(teamName) || `hsl(${TEAM_COLORS[0]})`;
   }, [teamColorMap]);
@@ -251,36 +252,20 @@ export function Timeline({ projects, onProjectDelete, onProjectEdit, onProjectMo
     if (!project) return;
 
     const timelineRect = e.currentTarget.getBoundingClientRect();
-    const totalDaysInYear = getDaysInYear(new Date(displayYear, 0, 1));
-
-    // Calculate old visual start position in days
-    const projectStart = parseISO(project.startDate);
-    const projectEnd = parseISO(project.endDate);
-    const startDayForRender = differenceInDays(projectStart, startOfYear(new Date(displayYear, 0, 1)));
-    const durationForRender = differenceInDays(projectEnd, projectStart) + 1;
-    const oldVisualStartDay = Math.max(0, startDayForRender);
-
-    // Calculate clamped duration for width calculation
-    const clampedEndDay = Math.min(totalDaysInYear, startDayForRender + durationForRender);
-    const clampedDuration = clampedEndDay - oldVisualStartDay;
-    if (clampedDuration <= 0 && projects.filter(p => getYear(parseISO(p.startDate)) === displayYear || getYear(parseISO(p.endDate)) === displayYear).length > 0) {
-        // This case can happen for projects that are completely outside the current year view,
-        // but due to filtering they might still be in the projects list.
-        // We avoid moving them if they are not visible.
-        return;
-    }
-    const projectWidthInPixels = (clampedDuration / totalDaysInYear) * timelineRect.width;
-
-    // Calculate new visual start position in pixels, clamped to timeline bounds
+    
+    // Convert drop position to a day of the year
     const dropX = e.clientX - timelineRect.left;
-    let newVisualStartX = dropX - offsetInPixels;
-    newVisualStartX = Math.max(0, Math.min(timelineRect.width - projectWidthInPixels, newVisualStartX));
-    
-    // Convert new pixel position to day of the year
+    const newVisualStartX = Math.max(0, Math.min(timelineRect.width, dropX - offsetInPixels));
+    const totalDaysInYear = getDaysInYear(new Date(displayYear, 0, 1));
     const newVisualStartDay = Math.round((newVisualStartX / timelineRect.width) * totalDaysInYear);
-    
-    // Calculate the delta and apply to the actual start date
-    const dayDelta = newVisualStartDay - oldVisualStartDay;
+
+    // Calculate how many days the project's visual start has shifted
+    const projectStart = parseISO(project.startDate);
+    const startOfYearDate = startOfYear(new Date(displayYear, 0, 1));
+    const originalVisualStartDay = differenceInCalendarDays(projectStart, startOfYearDate);
+    const dayDelta = newVisualStartDay - originalVisualStartDay;
+
+    // Apply the shift to the actual start date
     const newStartDate = addDays(projectStart, dayDelta);
 
     onProjectMove(projectId, newStartDate);

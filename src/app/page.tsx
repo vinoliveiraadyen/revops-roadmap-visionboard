@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { getOptimalSequence } from "@/app/actions";
 import { Lightbulb, Loader2, Upload, Plus, ListFilter } from "lucide-react";
-import { format, parseISO, differenceInDays, addDays, getYear } from "date-fns";
+import { format, parseISO, differenceInCalendarDays, addDays, getYear } from "date-fns";
 import { ImportCsvDialog } from "@/components/import-csv-dialog";
 import { ExportCsvButton } from "@/components/export-csv-button";
 import { MultiSelectFilter } from "@/components/multi-select-filter";
@@ -32,10 +32,10 @@ const initialProjects: Project[] = [
     { id: 'proj-1', name: 'Initial Planning & Research', epicNumber: 'EPIC-001', team: 'Strategy', impact: 'High', startDate: '2024-01-15', endDate: '2024-02-28', owner: 'PM, UX Researcher', support: 'IT', dependencies: '' },
     { id: 'proj-2', name: 'Develop Core Features', epicNumber: 'EPIC-002', team: 'Engineering', impact: 'High', startDate: '2024-03-01', endDate: '2024-06-15', owner: 'Dev Team A, QA', support: 'Architecture', dependencies: 'Initial Planning & Research' },
     { id: 'proj-7', name: 'Mobile App Design', epicNumber: 'EPIC-007', team: 'Design', impact: 'Medium', startDate: '2024-02-01', endDate: '2024-04-30', owner: 'UI/UX Designer', support: 'Design System Team', dependencies: 'Initial Planning & Research' },
-    { id: 'proj-6', name: 'API Integration', epicNumber: 'EPIC-006', team: 'Engineering', impact: 'Medium', startDate: '2024-04-15', endDate: '2024-05-30', owner: 'Dev Team A', support: 'DevOps', dependencies: 'Develop Core Features' },
+    { id: 'proj-6', name: 'API Integration', epicNumber: 'EPIC-006', team: 'GTMO Commercial', impact: 'Medium', startDate: '2024-04-15', endDate: '2024-05-30', owner: 'Dev Team A', support: 'DevOps', dependencies: 'Develop Core Features' },
     { id: 'proj-3', name: 'User Testing & Feedback', epicNumber: 'EPIC-003', team: 'QA & UX', impact: 'Medium', startDate: '2024-06-16', endDate: '2024-07-31', owner: 'Test Group, UX Designer', support: 'Analytics', dependencies: 'Develop Core Features' },
     { id: 'proj-4', name: 'Marketing Launch Campaign', epicNumber: 'EPIC-004', team: 'Marketing', impact: 'High', startDate: '2024-08-01', endDate: '2024-09-15', owner: 'Marketing Team', support: 'Sales', dependencies: 'Develop Core Features' },
-    { id: 'proj-5', name: 'Q4 Feature Enhancements', epicNumber: 'EPIC-005', team: 'Engineering', impact: 'Low', startDate: '2024-10-01', endDate: '2024-11-30', owner: 'Dev Team B', support: 'Architecture', dependencies: 'User Testing & Feedback' },
+    { id: 'proj-5', name: 'Q4 Feature Enhancements', epicNumber: 'EPIC-005', team: 'Salesforce Commercial', impact: 'Low', startDate: '2024-10-01', endDate: '2024-11-30', owner: 'Dev Team B', support: 'Architecture', dependencies: 'User Testing & Feedback' },
 ];
 
 export default function Home() {
@@ -217,7 +217,7 @@ export default function Home() {
         try {
             const originalStart = parseISO(projectToMove.startDate);
             const originalEnd = parseISO(projectToMove.endDate);
-            const duration = differenceInDays(originalEnd, originalStart);
+            const duration = differenceInCalendarDays(originalEnd, originalStart);
 
             const newEndDate = addDays(newStartDate, duration);
 
@@ -389,9 +389,9 @@ export default function Home() {
                 />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="w-full sm:w-auto justify-start">
+                    <Button variant="outline" className="w-[180px] justify-start">
                       <ListFilter className="mr-2 h-4 w-4" />
-                      <span>Year</span>
+                      Year
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-40" align="start">
@@ -414,7 +414,7 @@ export default function Home() {
             </div>
             {(hasActiveFilters || selectedYear !== new Date().getFullYear()) && (
                 <div className="mt-4 text-sm text-muted-foreground">
-                    Showing {filteredProjects.length} of {projects.length} projects.
+                    Showing {filteredProjects.length} of {projects.length} projects for {selectedYear}.
                 </div>
             )}
           </div>
