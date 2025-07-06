@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { getOptimalSequence } from "@/app/actions";
-import { Lightbulb, Loader2, Upload, Plus } from "lucide-react";
+import { Lightbulb, Loader2, Upload, Plus, ListFilter } from "lucide-react";
 import { format, parseISO, differenceInDays, addDays, getYear } from "date-fns";
 import { ImportCsvDialog } from "@/components/import-csv-dialog";
 import { ExportCsvButton } from "@/components/export-csv-button";
@@ -18,8 +18,15 @@ import { Separator } from "@/components/ui/separator";
 import { ResourceAllocationChart } from "@/components/resource-load-chart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProjectTable } from "@/components/project-table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const initialProjects: Project[] = [
     { id: 'proj-1', name: 'Initial Planning & Research', epicNumber: 'EPIC-001', team: 'Strategy', impact: 'High', startDate: '2024-01-15', endDate: '2024-02-28', owner: 'PM, UX Researcher', support: 'IT', dependencies: '' },
@@ -350,19 +357,6 @@ export default function Home() {
           <div>
             <div className="flex flex-wrap items-center gap-4">
                 <h3 className="text-lg font-semibold font-headline">Filters</h3>
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="year-select">Year</Label>
-                  <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(Number(value))}>
-                    <SelectTrigger id="year-select" className="w-[120px]">
-                      <SelectValue placeholder="Select year" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {allYears.map(year => (
-                        <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
                 <MultiSelectFilter
                     label="Teams"
                     options={allTeams}
@@ -393,6 +387,30 @@ export default function Home() {
                     selectedValues={selectedDependencies}
                     onSelectedValuesChange={setSelectedDependencies}
                 />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="w-full sm:w-auto justify-start">
+                      <ListFilter className="mr-2 h-4 w-4" />
+                      <span>Year</span>
+                      {selectedYear && (
+                        <span className="ml-2 rounded-md bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
+                          {selectedYear}
+                        </span>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-40" align="start">
+                    <DropdownMenuLabel>Filter by Year</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuRadioGroup value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(Number(value))}>
+                      {allYears.map((year) => (
+                        <DropdownMenuRadioItem key={year} value={year.toString()}>
+                          {year}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 {hasActiveFilters && (
                     <Button variant="ghost" onClick={clearFilters} className="text-sm">
                         Clear Filters
