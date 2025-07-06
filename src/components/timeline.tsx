@@ -75,14 +75,9 @@ const TimelineProject = ({ project, year, rowIndex, onDelete, onEdit, getTeamCol
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     e.dataTransfer.setData("projectId", project.id);
     
-    // Store mouse offset relative to the element start
     const rect = e.currentTarget.getBoundingClientRect();
     const offset = e.clientX - rect.left;
     e.dataTransfer.setData("dragOffset", offset.toString());
-
-    // Store original duration
-    const originalDuration = differenceInDays(projectEnd, projectStart);
-    e.dataTransfer.setData("duration", originalDuration.toString());
   };
 
   return (
@@ -225,16 +220,7 @@ const getProjectRows = (projects: Project[], year: number) => {
     return {projectRowMap, rowCount: rows.length};
 }
 
-export function Timeline({ projects, onProjectDelete, onProjectEdit, onProjectMove }: { projects: Project[]; onProjectDelete: (projectId: string) => void; onProjectEdit: (project: Project) => void; onProjectMove: (projectId: string, newStartDate: Date) => void; }) {
-  const allYears = Array.from(new Set(projects.flatMap(p => {
-    try {
-      return [getYear(parseISO(p.startDate)), getYear(parseISO(p.endDate))];
-    } catch (e) {
-      return [];
-    }
-  }))).sort();
-  const displayYear = allYears.length > 0 ? allYears[0] : new Date().getFullYear();
-  
+export function Timeline({ projects, onProjectDelete, onProjectEdit, onProjectMove, displayYear }: { projects: Project[]; onProjectDelete: (projectId: string) => void; onProjectEdit: (project: Project) => void; onProjectMove: (projectId: string, newStartDate: Date) => void; displayYear: number; }) {
   const months = Array.from({ length: 12 }, (_, i) => format(new Date(displayYear, i, 1), "MMM"));
   
   const { projectRowMap, rowCount } = React.useMemo(() => getProjectRows(projects, displayYear), [projects, displayYear]);
@@ -257,21 +243,45 @@ export function Timeline({ projects, onProjectDelete, onProjectEdit, onProjectMo
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const projectId = e.dataTransfer.getData("projectId");
-    const offset = parseFloat(e.dataTransfer.getData("dragOffset") || "0");
-    const duration = parseInt(e.dataTransfer.getData("duration") || "0", 10);
+    const offsetInPixels = parseFloat(e.dataTransfer.getData("dragOffset") || "0");
+    
     if (!projectId) return;
 
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return;
+
     const timelineRect = e.currentTarget.getBoundingClientRect();
-    const totalDays = getDaysInYear(new Date(displayYear, 0, 1));
+    const totalDaysInYear = getDaysInYear(new Date(displayYear, 0, 1));
 
-    const projectWidthInPixels = (duration / totalDays) * timelineRect.width;
-    let startX = e.clientX - timelineRect.left - offset;
-    // Clamp the position to stay within the timeline
-    startX = Math.max(0, Math.min(timelineRect.width - projectWidthInPixels, startX));
+    // Calculate old visual start position in days
+    const projectStart = parseISO(project.startDate);
+    const projectEnd = parseISO(project.endDate);
+    const startDayForRender = differenceInDays(projectStart, startOfYear(new Date(displayYear, 0, 1)));
+    const durationForRender = differenceInDays(projectEnd, projectStart) + 1;
+    const oldVisualStartDay = Math.max(0, startDayForRender);
 
-    const dayOfYear = Math.round((startX / timelineRect.width) * totalDays);
+    // Calculate clamped duration for width calculation
+    const clampedEndDay = Math.min(totalDaysInYear, startDayForRender + durationForRender);
+    const clampedDuration = clampedEndDay - oldVisualStartDay;
+    if (clampedDuration <= 0 && projects.filter(p => getYear(parseISO(p.startDate)) === displayYear || getYear(parseISO(p.endDate)) === displayYear).length > 0) {
+        // This case can happen for projects that are completely outside the current year view,
+        // but due to filtering they might still be in the projects list.
+        // We avoid moving them if they are not visible.
+        return;
+    }
+    const projectWidthInPixels = (clampedDuration / totalDaysInYear) * timelineRect.width;
+
+    // Calculate new visual start position in pixels, clamped to timeline bounds
+    const dropX = e.clientX - timelineRect.left;
+    let newVisualStartX = dropX - offsetInPixels;
+    newVisualStartX = Math.max(0, Math.min(timelineRect.width - projectWidthInPixels, newVisualStartX));
     
-    const newStartDate = addDays(startOfYear(new Date(displayYear, 0, 1)), dayOfYear);
+    // Convert new pixel position to day of the year
+    const newVisualStartDay = Math.round((newVisualStartX / timelineRect.width) * totalDaysInYear);
+    
+    // Calculate the delta and apply to the actual start date
+    const dayDelta = newVisualStartDay - oldVisualStartDay;
+    const newStartDate = addDays(projectStart, dayDelta);
 
     onProjectMove(projectId, newStartDate);
   };

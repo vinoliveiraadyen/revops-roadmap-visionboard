@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useTransition, useMemo } from "react";
+import { useState, useTransition, useMemo, useEffect } from "react";
 import type { Project } from "@/lib/types";
 import { AddProjectDialog, type ProjectFormValues } from "@/components/add-project-dialog";
 import { Timeline } from "@/components/timeline";
@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { getOptimalSequence } from "@/app/actions";
 import { Lightbulb, Loader2, Upload, Plus } from "lucide-react";
-import { format, parseISO, differenceInDays, addDays } from "date-fns";
+import { format, parseISO, differenceInDays, addDays, getYear } from "date-fns";
 import { ImportCsvDialog } from "@/components/import-csv-dialog";
 import { ExportCsvButton } from "@/components/export-csv-button";
 import { MultiSelectFilter } from "@/components/multi-select-filter";
@@ -18,6 +18,8 @@ import { Separator } from "@/components/ui/separator";
 import { ResourceAllocationChart } from "@/components/resource-load-chart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProjectTable } from "@/components/project-table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 const initialProjects: Project[] = [
     { id: 'proj-1', name: 'Initial Planning & Research', epicNumber: 'EPIC-001', team: 'Strategy', impact: 'High', startDate: '2024-01-15', endDate: '2024-02-28', owner: 'PM, UX Researcher', support: 'IT', dependencies: '' },
@@ -40,18 +42,20 @@ export default function Home() {
   const [selectedImpacts, setSelectedImpacts] = useState<string[]>([]);
   const [selectedSupport, setSelectedSupport] = useState<string[]>([]);
   const [selectedDependencies, setSelectedDependencies] = useState<string[]>([]);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
   
   const [selectedOwnersForChart, setSelectedOwnersForChart] = useState<string[]>([]);
 
-  const { allTeams, allImpacts, allOwners, allSupport, allDependencies } = useMemo(() => {
+  const { allTeams, allImpacts, allOwners, allSupport, allDependencies, allYears } = useMemo(() => {
     const teamsSet = new Set<string>();
     const impactsSet = new Set<string>();
     const ownersSet = new Set<string>();
     const supportSet = new Set<string>();
     const dependenciesSet = new Set<string>();
+    const yearsSet = new Set<number>();
 
     for (const project of projects) {
       if (project.team) teamsSet.add(project.team);
@@ -71,6 +75,14 @@ export default function Home() {
         const trimmed = d.trim();
         if (trimmed && trimmed.toLowerCase() !== 'none') dependenciesSet.add(trimmed);
       });
+      try {
+        if (project.startDate) yearsSet.add(getYear(parseISO(project.startDate)));
+        if (project.endDate) yearsSet.add(getYear(parseISO(project.endDate)));
+      } catch (e) { /* ignore invalid dates */ }
+    }
+    
+    if (yearsSet.size === 0) {
+      yearsSet.add(new Date().getFullYear());
     }
 
     return {
@@ -79,39 +91,45 @@ export default function Home() {
       allOwners: [...ownersSet].sort(),
       allSupport: [...supportSet].sort(),
       allDependencies: [...dependenciesSet].sort(),
+      allYears: Array.from(yearsSet).sort((a, b) => a - b),
     };
   }, [projects]);
   
+  useEffect(() => {
+    if (allYears.length > 0 && !allYears.includes(selectedYear)) {
+      setSelectedYear(allYears[0]);
+    }
+  }, [allYears, selectedYear]);
+
   const hasActiveFilters = selectedTeams.length > 0 || selectedOwners.length > 0 || selectedImpacts.length > 0 || selectedSupport.length > 0 || selectedDependencies.length > 0;
   
   const filteredProjects = useMemo(() => {
     if (!hasActiveFilters) return projects;
 
     return projects.filter(project => {
-      // With OR logic, a project is included if it matches ANY of the active filter criteria.
       const conditions = [];
 
       if (selectedTeams.length > 0) {
         conditions.push(selectedTeams.includes(project.team));
       }
       if (selectedImpacts.length > 0) {
-        const projectImpacts = project.impact.split(',').map(i => i.trim()).filter(Boolean);
+        const projectImpacts = (project.impact || "").split(',').map(i => i.trim()).filter(Boolean);
         conditions.push(projectImpacts.some(i => selectedImpacts.includes(i)));
       }
       if (selectedOwners.length > 0) {
-        const projectOwners = project.owner.split(',').map(r => r.trim()).filter(Boolean);
+        const projectOwners = (project.owner || "").split(',').map(r => r.trim()).filter(Boolean);
         conditions.push(projectOwners.some(r => selectedOwners.includes(r)));
       }
       if (selectedSupport.length > 0) {
-        const projectSupport = project.support.split(',').map(s => s.trim()).filter(Boolean);
+        const projectSupport = (project.support || "").split(',').map(s => s.trim()).filter(Boolean);
         conditions.push(projectSupport.some(s => selectedSupport.includes(s)));
       }
       if (selectedDependencies.length > 0) {
-        const projectDependencies = project.dependencies.split(',').map(d => d.trim()).filter(Boolean);
+        const projectDependencies = (project.dependencies || "").split(',').map(d => d.trim()).filter(Boolean);
         conditions.push(projectDependencies.some(d => selectedDependencies.includes(d)));
       }
       
-      // A project matches if any of its attributes pass an active filter.
+      if (conditions.length === 0) return true;
       return conditions.some(c => c === true);
     });
   }, [projects, selectedTeams, selectedOwners, selectedImpacts, selectedSupport, selectedDependencies, hasActiveFilters]);
@@ -364,7 +382,26 @@ export default function Home() {
             <TabsTrigger value="table">Table View</TabsTrigger>
           </TabsList>
           <TabsContent value="timeline">
-            <Timeline projects={filteredProjects} onProjectDelete={handleProjectDelete} onProjectEdit={handleProjectEdit} onProjectMove={handleProjectMove} />
+            <div className="flex items-center gap-2 mb-4">
+              <Label htmlFor="year-select">Year</Label>
+              <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(Number(value))}>
+                <SelectTrigger id="year-select" className="w-[120px]">
+                  <SelectValue placeholder="Select year" />
+                </SelectTrigger>
+                <SelectContent>
+                  {allYears.map(year => (
+                    <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Timeline 
+              projects={filteredProjects} 
+              onProjectDelete={handleProjectDelete} 
+              onProjectEdit={handleProjectEdit} 
+              onProjectMove={handleProjectMove}
+              displayYear={selectedYear}
+            />
           </TabsContent>
           <TabsContent value="table">
             <ProjectTable projects={filteredProjects} onProjectEdit={handleProjectEdit} onProjectDelete={handleProjectDelete} />
