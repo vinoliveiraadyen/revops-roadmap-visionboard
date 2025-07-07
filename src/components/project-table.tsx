@@ -6,6 +6,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -28,9 +29,10 @@ interface ProjectTableProps {
   projects: Project[];
   onProjectEdit: (project: Project) => void;
   onProjectDelete: (projectId: string) => void;
+  onDeleteAll: () => void;
 }
 
-export function ProjectTable({ projects, onProjectEdit, onProjectDelete }: ProjectTableProps) {
+export function ProjectTable({ projects, onProjectEdit, onProjectDelete, onDeleteAll }: ProjectTableProps) {
   return (
     <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
       <Table>
@@ -104,6 +106,41 @@ export function ProjectTable({ projects, onProjectEdit, onProjectDelete }: Proje
             </TableRow>
           )}
         </TableBody>
+        <TableFooter>
+          <TableRow>
+            <TableCell colSpan={10} className="text-right p-4">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={projects.length === 0}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete All Projects
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete all {projects.length} projects from the board.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={onDeleteAll}
+                      className={buttonVariants({ variant: "destructive" })}
+                    >
+                      Delete All
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </TableCell>
+          </TableRow>
+        </TableFooter>
       </Table>
     </div>
   );

@@ -203,6 +203,15 @@ export default function Home() {
       description: "The project has been successfully removed.",
     });
   };
+
+  const handleDeleteAllProjects = () => {
+    setProjects([]);
+    toast({
+      title: "All Projects Deleted",
+      description: "The project board has been cleared.",
+      variant: "destructive",
+    });
+  };
   
   const handleProjectEdit = (project: Project) => {
     setProjectToEdit(project);
@@ -389,7 +398,7 @@ export default function Home() {
                 />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="w-[180px] justify-start">
+                    <Button variant="outline" className="w-auto justify-start">
                       <ListFilter className="mr-2 h-4 w-4" />
                       Year
                     </Button>
@@ -435,7 +444,12 @@ export default function Home() {
             />
           </TabsContent>
           <TabsContent value="table">
-            <ProjectTable projects={filteredProjects} onProjectEdit={handleProjectEdit} onProjectDelete={handleProjectDelete} />
+            <ProjectTable 
+              projects={filteredProjects} 
+              onProjectEdit={handleProjectEdit} 
+              onProjectDelete={handleProjectDelete}
+              onDeleteAll={handleDeleteAllProjects} 
+            />
           </TabsContent>
         </Tabs>
 
