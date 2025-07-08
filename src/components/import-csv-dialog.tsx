@@ -63,7 +63,7 @@ export function ImportCsvDialog({ onProjectsAdd }: ImportCsvDialogProps) {
 
           const newProjects: Project[] = projectsToParse.map((row, index) => {
             const rowIndexForError = firstRowIsHeader ? index + 2 : index + 1;
-            const [name, epicNumber, team, impact, owner, support, dependencies, startDateStr, endDateStr] = row;
+            const [name, epicNumber, team, impact, owner, support, dependencies, startDateStr, endDateStr, progressStr] = row;
 
             if (!name || !epicNumber || !team || !startDateStr || !endDateStr) {
               throw new Error(`Row ${rowIndexForError} is incomplete. Project Name, Epic Number, Team, Start Date, and End Date are required.`);
@@ -74,6 +74,11 @@ export function ImportCsvDialog({ onProjectsAdd }: ImportCsvDialogProps) {
 
             if (!isValid(startDate) || !isValid(endDate)) {
                 throw new Error(`Invalid date format in row ${rowIndexForError}. Please use a valid date format (e.g., YYYY-MM-DD).`);
+            }
+            
+            const progress = progressStr ? parseInt(progressStr, 10) : 0;
+            if (isNaN(progress) || progress < 0 || progress > 100) {
+              throw new Error(`Invalid progress value in row ${rowIndexForError}. Please use a number between 0 and 100.`);
             }
 
             return {
@@ -87,6 +92,7 @@ export function ImportCsvDialog({ onProjectsAdd }: ImportCsvDialogProps) {
               dependencies: dependencies || "",
               startDate: format(startDate, "yyyy-MM-dd"),
               endDate: format(endDate, "yyyy-MM-dd"),
+              progress,
             };
           });
 
@@ -147,6 +153,7 @@ export function ImportCsvDialog({ onProjectsAdd }: ImportCsvDialogProps) {
                     <li>Dependencies</li>
                     <li>Start Date</li>
                     <li>End Date</li>
+                    <li>Progress (0-100)</li>
                 </ol>
                  <p className="mt-2 text-xs">A header row is optional and will be skipped if detected.</p>
             </div>

@@ -24,6 +24,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Progress } from "@/components/ui/progress";
 
 interface ProjectTableProps {
   projects: Project[];
@@ -42,6 +43,7 @@ export function ProjectTable({ projects, onProjectEdit, onProjectDelete, onDelet
             <TableHead>Epic</TableHead>
             <TableHead>Team</TableHead>
             <TableHead>Impact</TableHead>
+            <TableHead>Progress</TableHead>
             <TableHead>Owner</TableHead>
             <TableHead>Support</TableHead>
             <TableHead>Dependencies</TableHead>
@@ -58,6 +60,12 @@ export function ProjectTable({ projects, onProjectEdit, onProjectDelete, onDelet
                 <TableCell>{project.epicNumber}</TableCell>
                 <TableCell>{project.team}</TableCell>
                 <TableCell>{project.impact}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Progress value={project.progress} className="w-24" />
+                    <span className="text-muted-foreground text-xs">{project.progress || 0}%</span>
+                  </div>
+                </TableCell>
                 <TableCell>{project.owner}</TableCell>
                 <TableCell>{project.support}</TableCell>
                 <TableCell>{project.dependencies}</TableCell>
@@ -100,7 +108,7 @@ export function ProjectTable({ projects, onProjectEdit, onProjectDelete, onDelet
             ))
           ) : (
             <TableRow>
-                <TableCell colSpan={10} className="h-24 text-center">
+                <TableCell colSpan={11} className="h-24 text-center">
                     No projects found.
                 </TableCell>
             </TableRow>
@@ -108,7 +116,7 @@ export function ProjectTable({ projects, onProjectEdit, onProjectDelete, onDelet
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={10} className="text-right p-4">
+            <TableCell colSpan={11} className="text-right p-4">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button

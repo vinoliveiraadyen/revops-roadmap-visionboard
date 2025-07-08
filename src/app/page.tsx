@@ -29,13 +29,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const initialProjects: Project[] = [
-    { id: 'proj-1', name: 'Initial Planning & Research', epicNumber: 'EPIC-001', team: 'Strategy', impact: 'High', startDate: '2024-01-15', endDate: '2024-02-28', owner: 'PM, UX Researcher', support: 'IT', dependencies: '' },
-    { id: 'proj-2', name: 'Develop Core Features', epicNumber: 'EPIC-002', team: 'Engineering', impact: 'High', startDate: '2024-03-01', endDate: '2024-06-15', owner: 'Dev Team A, QA', support: 'Architecture', dependencies: 'Initial Planning & Research' },
-    { id: 'proj-7', name: 'Mobile App Design', epicNumber: 'EPIC-007', team: 'Design', impact: 'Medium', startDate: '2024-02-01', endDate: '2024-04-30', owner: 'UI/UX Designer', support: 'Design System Team', dependencies: 'Initial Planning & Research' },
-    { id: 'proj-6', name: 'API Integration', epicNumber: 'EPIC-006', team: 'GTMO Commercial', impact: 'Medium', startDate: '2024-04-15', endDate: '2024-05-30', owner: 'Dev Team A', support: 'DevOps', dependencies: 'Develop Core Features' },
-    { id: 'proj-3', name: 'User Testing & Feedback', epicNumber: 'EPIC-003', team: 'QA & UX', impact: 'Medium', startDate: '2024-06-16', endDate: '2024-07-31', owner: 'Test Group, UX Designer', support: 'Analytics', dependencies: 'Develop Core Features' },
-    { id: 'proj-4', name: 'Marketing Launch Campaign', epicNumber: 'EPIC-004', team: 'Marketing', impact: 'High', startDate: '2024-08-01', endDate: '2024-09-15', owner: 'Marketing Team', support: 'Sales', dependencies: 'Develop Core Features' },
-    { id: 'proj-5', name: 'Q4 Feature Enhancements', epicNumber: 'EPIC-005', team: 'Salesforce Commercial', impact: 'Low', startDate: '2024-10-01', endDate: '2024-11-30', owner: 'Dev Team B', support: 'Architecture', dependencies: 'User Testing & Feedback' },
+    { id: 'proj-1', name: 'Initial Planning & Research', epicNumber: 'EPIC-001', team: 'Strategy', impact: 'High', startDate: '2024-01-15', endDate: '2024-02-28', owner: 'PM, UX Researcher', support: 'IT', dependencies: '', progress: 100 },
+    { id: 'proj-2', name: 'Develop Core Features', epicNumber: 'EPIC-002', team: 'Engineering', impact: 'High', startDate: '2024-03-01', endDate: '2024-06-15', owner: 'Dev Team A, QA', support: 'Architecture', dependencies: 'Initial Planning & Research', progress: 75 },
+    { id: 'proj-7', name: 'Mobile App Design', epicNumber: 'EPIC-007', team: 'Design', impact: 'Medium', startDate: '2024-02-01', endDate: '2024-04-30', owner: 'UI/UX Designer', support: 'Design System Team', dependencies: 'Initial Planning & Research', progress: 90 },
+    { id: 'proj-6', name: 'API Integration', epicNumber: 'EPIC-006', team: 'GTMO Commercial', impact: 'Medium', startDate: '2024-04-15', endDate: '2024-05-30', owner: 'Dev Team A', support: 'DevOps', dependencies: 'Develop Core Features', progress: 50 },
+    { id: 'proj-3', name: 'User Testing & Feedback', epicNumber: 'EPIC-003', team: 'QA & UX', impact: 'Medium', startDate: '2024-06-16', endDate: '2024-07-31', owner: 'Test Group, UX Designer', support: 'Analytics', dependencies: 'Develop Core Features', progress: 20 },
+    { id: 'proj-4', name: 'Marketing Launch Campaign', epicNumber: 'EPIC-004', team: 'Marketing', impact: 'High', startDate: '2024-08-01', endDate: '2024-09-15', owner: 'Marketing Team', support: 'Sales', dependencies: 'Develop Core Features', progress: 0 },
+    { id: 'proj-5', name: 'Q4 Feature Enhancements', epicNumber: 'EPIC-005', team: 'Salesforce Commercial', impact: 'Low', startDate: '2024-10-01', endDate: '2024-11-30', owner: 'Dev Team B', support: 'Architecture', dependencies: 'User Testing & Feedback', progress: 0 },
 ];
 
 export default function Home() {
@@ -133,29 +133,31 @@ export default function Home() {
             return true; // No other filters active, so if year matches, include it
         }
 
-        const conditions = [];
+        const teamMatch = selectedTeams.length === 0 || selectedTeams.includes(project.team);
+        const impactMatch = selectedImpacts.length === 0 || (project.impact || "").split(',').map(i => i.trim()).filter(Boolean).some(i => selectedImpacts.includes(i));
+        const ownerMatch = selectedOwners.length === 0 || (project.owner || "").split(',').map(r => r.trim()).filter(Boolean).some(r => selectedOwners.includes(r));
+        const supportMatch = selectedSupport.length === 0 || (project.support || "").split(',').map(s => s.trim()).filter(Boolean).some(s => selectedSupport.includes(s));
+        const dependencyMatch = selectedDependencies.length === 0 || (project.dependencies || "").split(',').map(d => d.trim()).filter(Boolean).some(d => selectedDependencies.includes(d));
 
-        if (selectedTeams.length > 0) {
-            conditions.push(selectedTeams.includes(project.team));
+        const activeFilterCategories = [
+            selectedTeams.length > 0,
+            selectedImpacts.length > 0,
+            selectedOwners.length > 0,
+            selectedSupport.length > 0,
+            selectedDependencies.length > 0
+        ].filter(Boolean).length;
+
+        if (activeFilterCategories > 0) {
+            const matches = [];
+            if (selectedTeams.length > 0) matches.push(teamMatch);
+            if (selectedImpacts.length > 0) matches.push(impactMatch);
+            if (selectedOwners.length > 0) matches.push(ownerMatch);
+            if (selectedSupport.length > 0) matches.push(supportMatch);
+            if (selectedDependencies.length > 0) matches.push(dependencyMatch);
+            return matches.some(match => match);
         }
-        if (selectedImpacts.length > 0) {
-            const projectImpacts = (project.impact || "").split(',').map(i => i.trim()).filter(Boolean);
-            conditions.push(projectImpacts.some(i => selectedImpacts.includes(i)));
-        }
-        if (selectedOwners.length > 0) {
-            const projectOwners = (project.owner || "").split(',').map(r => r.trim()).filter(Boolean);
-            conditions.push(projectOwners.some(r => selectedOwners.includes(r)));
-        }
-        if (selectedSupport.length > 0) {
-            const projectSupport = (project.support || "").split(',').map(s => s.trim()).filter(Boolean);
-            conditions.push(projectSupport.some(s => selectedSupport.includes(s)));
-        }
-        if (selectedDependencies.length > 0) {
-            const projectDependencies = (project.dependencies || "").split(',').map(d => d.trim()).filter(Boolean);
-            conditions.push(projectDependencies.some(d => selectedDependencies.includes(d)));
-        }
-        
-        return conditions.some(c => c === true);
+
+        return true;
     });
   }, [projects, selectedYear, selectedTeams, selectedOwners, selectedImpacts, selectedSupport, selectedDependencies, hasActiveFilters]);
 
@@ -171,21 +173,21 @@ export default function Home() {
         owner: data.owner || "",
         support: data.support || "",
         dependencies: data.dependencies || "",
+        progress: data.progress || 0,
       } : p));
       toast({ title: "Project Updated", description: `"${data.name}" has been successfully updated.` });
     } else {
       // Add new project
       const newProject: Project = {
         id: `proj-${Date.now()}`,
-        name: data.name,
-        epicNumber: data.epicNumber,
-        team: data.team,
+        ...data,
+        startDate: format(data.startDate, "yyyy-MM-dd"),
+        endDate: format(data.endDate, "yyyy-MM-dd"),
         impact: data.impact || "",
         owner: data.owner || "",
         support: data.support || "",
-        startDate: format(data.startDate, "yyyy-MM-dd"),
-        endDate: format(data.endDate, "yyyy-MM-dd"),
         dependencies: data.dependencies || "",
+        progress: data.progress || 0,
       };
       setProjects(prev => [...prev, newProject]);
       toast({ title: "Project Added", description: `"${data.name}" has been successfully created.` });

@@ -13,7 +13,7 @@ import {
 } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Users, Calendar, Briefcase, Link as LinkIcon, Trash2, Pencil, Zap, LifeBuoy } from "lucide-react";
+import { Users, Calendar, Briefcase, Link as LinkIcon, Trash2, Pencil, Zap, LifeBuoy, Activity } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,18 +35,18 @@ const getDaysInYear = (date: Date) => {
 };
 
 const TEAM_COLORS = [
-  "210 90% 55%", // Bright Blue
-  "340 85% 60%", // Bright Red-Pink
-  "145 70% 45%", // Strong Green
-  "35 95% 55%",  // Bright Orange
-  "265 80% 65%", // Vibrant Purple
-  "190 85% 50%", // Teal
-  "50 100% 55%", // Gold
-  "280 70% 60%", // Indigo
-  "0 80% 60%",   // Strong Red
-  "170 75% 45%", // Sea Green
-  "300 80% 65%", // Magenta
-  "25 90% 50%",  // Brownish Orange
+    "210 90% 60%", // Brighter Blue
+    "340 90% 65%", // Brighter Red-Pink
+    "145 75% 50%", // Brighter Green
+    "35 100% 60%", // Brighter Orange
+    "265 85% 70%", // Brighter Purple
+    "190 90% 55%", // Brighter Teal
+    "50 100% 60%", // Brighter Gold
+    "280 75% 65%", // Brighter Indigo
+    "0 85% 65%",   // Brighter Red
+    "170 80% 50%", // Brighter Sea Green
+    "300 85% 70%", // Brighter Magenta
+    "25 95% 55%",  // Brighter Brownish Orange
 ];
 
 const TimelineProject = ({ project, year, rowIndex, onDelete, onEdit, getTeamColor }: { project: Project; year: number; rowIndex: number; onDelete: (projectId: string) => void; onEdit: (project: Project) => void; getTeamColor: (teamName: string) => string; }) => {
@@ -94,8 +94,12 @@ const TimelineProject = ({ project, year, rowIndex, onDelete, onEdit, getTeamCol
             borderColor: teamColor,
           }}
         >
-          <p className="text-sm font-medium truncate">{project.name}</p>
-          <p className="text-xs text-muted-foreground truncate">{project.owner}</p>
+          <div
+            className="absolute top-0 left-0 h-full opacity-30"
+            style={{ width: `${project.progress || 0}%`, backgroundColor: teamColor }}
+          />
+          <p className="text-sm font-medium truncate relative">{project.name}</p>
+          <p className="text-xs text-muted-foreground truncate relative">{project.owner}</p>
         </div>
       </PopoverTrigger>
       <PopoverContent className="w-80">
@@ -152,6 +156,10 @@ const TimelineProject = ({ project, year, rowIndex, onDelete, onEdit, getTeamCol
             <div className="flex items-center gap-2 text-muted-foreground">
               <Zap className="h-4 w-4 flex-shrink-0" />
               <span>Impact: {project.impact}</span>
+            </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Activity className="h-4 w-4 flex-shrink-0" />
+              <span>Progress: {project.progress || 0}%</span>
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Briefcase className="h-4 w-4 flex-shrink-0" />
@@ -255,17 +263,27 @@ export function Timeline({ projects, onProjectDelete, onProjectEdit, onProjectMo
     
     // Convert drop position to a day of the year
     const dropX = e.clientX - timelineRect.left;
-    const newVisualStartX = dropX - offsetInPixels;
+    let newVisualStartX = dropX - offsetInPixels;
+    newVisualStartX = Math.max(0, newVisualStartX); // Prevent dragging before timeline start
+
     const totalDaysInYear = getDaysInYear(new Date(displayYear, 0, 1));
-    const newVisualStartDay = Math.round((newVisualStartX / timelineRect.width) * totalDaysInYear);
-
-    // Calculate how many days the project's visual start has shifted
+    
+    const yearStartDate = startOfYear(new Date(displayYear, 0, 1));
     const projectStart = parseISO(project.startDate);
-    const startOfYearDate = startOfYear(new Date(displayYear, 0, 1));
-    const originalVisualStartDay = differenceInCalendarDays(projectStart, startOfYearDate);
-    const dayDelta = newVisualStartDay - originalVisualStartDay;
+    
+    const originalStartDayOfYear = differenceInCalendarDays(projectStart, startOfYear(projectStart));
 
-    // Apply the shift to the actual start date
+    let dayDelta;
+    if (getYear(projectStart) === displayYear) {
+      const originalVisualStartDay = differenceInCalendarDays(projectStart, yearStartDate);
+      const newVisualStartDay = (newVisualStartX / timelineRect.width) * totalDaysInYear;
+      dayDelta = newVisualStartDay - originalVisualStartDay;
+    } else {
+      const newVisualStartDay = (newVisualStartX / timelineRect.width) * totalDaysInYear;
+      const daysFromYearStartToProjectStart = differenceInCalendarDays(projectStart, yearStartDate);
+      dayDelta = newVisualStartDay - daysFromYearStartToProjectStart;
+    }
+
     const newStartDate = addDays(projectStart, dayDelta);
 
     onProjectMove(projectId, newStartDate);

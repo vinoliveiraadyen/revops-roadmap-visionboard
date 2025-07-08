@@ -22,6 +22,7 @@ const ProjectSchema = z.object({
   owner: z.string().optional().describe('The owner of the project.'),
   support: z.string().optional().describe('The support team or person for the project.'),
   dependencies: z.string().optional().describe('The project dependencies (names of other projects).'),
+  progress: z.number().optional().describe('The completion progress of the project from 0 to 100.'),
 });
 
 export type Project = z.infer<typeof ProjectSchema>;
@@ -65,6 +66,7 @@ const prompt = ai.definePrompt({
     Owner: {{this.owner}}
     Support: {{this.support}}
     Dependencies: {{this.dependencies}}
+    Progress: {{this.progress}}
   {{/each}}
 
   Team Availability: {{{teamAvailability}}}

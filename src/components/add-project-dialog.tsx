@@ -43,6 +43,10 @@ const projectSchema = z.object({
   owner: z.string().optional(),
   support: z.string().optional(),
   dependencies: z.string().optional(),
+  progress: z.preprocess(
+    (val) => (val === "" ? undefined : val),
+    z.coerce.number().min(0, "Must be 0 or more.").max(100, "Must be 100 or less.").optional()
+  ),
 });
 
 export type ProjectFormValues = z.infer<typeof projectSchema>;
@@ -76,6 +80,7 @@ export function AddProjectDialog({ onSave, projectToEdit, children, open, onOpen
       owner: "",
       support: "",
       dependencies: "",
+      progress: undefined,
     },
   });
 
@@ -98,6 +103,7 @@ export function AddProjectDialog({ onSave, projectToEdit, children, open, onOpen
           dependencies: "",
           startDate: undefined,
           endDate: undefined,
+          progress: undefined,
         });
       }
     }
@@ -174,6 +180,19 @@ export function AddProjectDialog({ onSave, projectToEdit, children, open, onOpen
                 )}
               />
             </div>
+            <FormField
+              control={form.control}
+              name="progress"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Progress (%)</FormLabel>
+                  <FormControl>
+                    <Input type="number" min="0" max="100" placeholder="e.g., 50" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
