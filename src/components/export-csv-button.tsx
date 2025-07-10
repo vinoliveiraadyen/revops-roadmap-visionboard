@@ -17,9 +17,9 @@ export function ExportCsvButton({ projects, fileName = "projects.csv" }: ExportC
     const dataToExport = projects.map(p => ({
       "Project Name": p.name,
       "Epic Number": p.epicNumber,
-      "Team": p.team,
-      "Impact": p.impact,
-      "Owner": p.owner,
+      "RevOps Team": p.revopsTeam,
+      "Function": p.function,
+      "Assignee": p.assignee,
       "Support": p.support,
       "Dependencies": p.dependencies,
       "Start Date": p.startDate,
@@ -30,7 +30,7 @@ export function ExportCsvButton({ projects, fileName = "projects.csv" }: ExportC
     // Convert JSON to CSV string. The `columns` option ensures the header order.
     const csv = Papa.unparse(dataToExport, {
         header: true,
-        columns: ["Project Name", "Epic Number", "Team", "Impact", "Owner", "Support", "Dependencies", "Start Date", "End Date", "Progress"]
+        columns: ["Project Name", "Epic Number", "RevOps Team", "Function", "Assignee", "Support", "Dependencies", "Start Date", "End Date", "Progress"]
     });
     
     // Create a Blob and trigger a download

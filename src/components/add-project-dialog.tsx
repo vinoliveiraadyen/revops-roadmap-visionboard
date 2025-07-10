@@ -36,11 +36,11 @@ import type { Project } from "@/lib/types";
 const projectSchema = z.object({
   name: z.string().min(1, "Project name is required"),
   epicNumber: z.string().min(1, "Epic number is required"),
-  team: z.string().min(1, "Team name is required"),
-  impact: z.string().optional(),
+  revopsTeam: z.string().min(1, "RevOps Team name is required"),
+  function: z.string().optional(),
   startDate: z.date({ required_error: "Start date is required." }),
   endDate: z.date({ required_error: "End date is required." }),
-  owner: z.string().optional(),
+  assignee: z.string().optional(),
   support: z.string().optional(),
   dependencies: z.string().optional(),
   progress: z.preprocess(
@@ -75,9 +75,9 @@ export function AddProjectDialog({ onSave, projectToEdit, children, open, onOpen
     } : {
       name: "",
       epicNumber: "",
-      team: "",
-      impact: "",
-      owner: "",
+      revopsTeam: "",
+      function: "",
+      assignee: "",
       support: "",
       dependencies: "",
       progress: undefined,
@@ -96,9 +96,9 @@ export function AddProjectDialog({ onSave, projectToEdit, children, open, onOpen
         form.reset({
           name: "",
           epicNumber: "",
-          team: "",
-          impact: "",
-          owner: "",
+          revopsTeam: "",
+          function: "",
+          assignee: "",
           support: "",
           dependencies: "",
           startDate: undefined,
@@ -155,12 +155,12 @@ export function AddProjectDialog({ onSave, projectToEdit, children, open, onOpen
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="team"
+                name="revopsTeam"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Team</FormLabel>
+                    <FormLabel>RevOps Team</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Marketing" {...field} />
+                      <Input placeholder="e.g., Engineering" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -168,10 +168,10 @@ export function AddProjectDialog({ onSave, projectToEdit, children, open, onOpen
               />
               <FormField
                 control={form.control}
-                name="impact"
+                name="function"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Impact</FormLabel>
+                    <FormLabel>Function</FormLabel>
                     <FormControl>
                       <Input placeholder="e.g., High, Medium, Low" {...field} />
                     </FormControl>
@@ -275,10 +275,10 @@ export function AddProjectDialog({ onSave, projectToEdit, children, open, onOpen
             </div>
             <FormField
               control={form.control}
-              name="owner"
+              name="assignee"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Owner</FormLabel>
+                  <FormLabel>Assignee</FormLabel>
                   <FormControl>
                     <Input placeholder="e.g., Designer, Developer" {...field} />
                   </FormControl>

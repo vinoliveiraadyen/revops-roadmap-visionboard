@@ -29,13 +29,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const initialProjects: Project[] = [
-    { id: 'proj-1', name: 'Initial Planning & Research', epicNumber: 'EPIC-001', team: 'Strategy', impact: 'High', startDate: '2024-01-15', endDate: '2024-02-28', owner: 'PM, UX Researcher', support: 'IT', dependencies: '', progress: 100 },
-    { id: 'proj-2', name: 'Develop Core Features', epicNumber: 'EPIC-002', team: 'Engineering', impact: 'High', startDate: '2024-03-01', endDate: '2024-06-15', owner: 'Dev Team A, QA', support: 'Architecture', dependencies: 'Initial Planning & Research', progress: 75 },
-    { id: 'proj-7', name: 'Mobile App Design', epicNumber: 'EPIC-007', team: 'Design', impact: 'Medium', startDate: '2024-02-01', endDate: '2024-04-30', owner: 'UI/UX Designer', support: 'Design System Team', dependencies: 'Initial Planning & Research', progress: 90 },
-    { id: 'proj-6', name: 'API Integration', epicNumber: 'EPIC-006', team: 'GTMO Commercial', impact: 'Medium', startDate: '2024-04-15', endDate: '2024-05-30', owner: 'Dev Team A', support: 'DevOps', dependencies: 'Develop Core Features', progress: 50 },
-    { id: 'proj-3', name: 'User Testing & Feedback', epicNumber: 'EPIC-003', team: 'QA & UX', impact: 'Medium', startDate: '2024-06-16', endDate: '2024-07-31', owner: 'Test Group, UX Designer', support: 'Analytics', dependencies: 'Develop Core Features', progress: 20 },
-    { id: 'proj-4', name: 'Marketing Launch Campaign', epicNumber: 'EPIC-004', team: 'Marketing', impact: 'High', startDate: '2024-08-01', endDate: '2024-09-15', owner: 'Marketing Team', support: 'Sales', dependencies: 'Develop Core Features', progress: 0 },
-    { id: 'proj-5', name: 'Q4 Feature Enhancements', epicNumber: 'EPIC-005', team: 'Salesforce Commercial', impact: 'Low', startDate: '2024-10-01', endDate: '2024-11-30', owner: 'Dev Team B', support: 'Architecture', dependencies: 'User Testing & Feedback', progress: 0 },
+    { id: 'proj-1', name: 'Initial Planning & Research', epicNumber: 'EPIC-001', revopsTeam: 'Strategy', function: 'High', startDate: '2024-01-15', endDate: '2024-02-28', assignee: 'PM, UX Researcher', support: 'IT', dependencies: '', progress: 100 },
+    { id: 'proj-2', name: 'Develop Core Features', epicNumber: 'EPIC-002', revopsTeam: 'Engineering', function: 'High', startDate: '2024-03-01', endDate: '2024-06-15', assignee: 'Dev Team A, QA', support: 'Architecture', dependencies: 'Initial Planning & Research', progress: 75 },
+    { id: 'proj-7', name: 'Mobile App Design', epicNumber: 'EPIC-007', revopsTeam: 'Design', function: 'Medium', startDate: '2024-02-01', endDate: '2024-04-30', assignee: 'UI/UX Designer', support: 'Design System Team', dependencies: 'Initial Planning & Research', progress: 90 },
+    { id: 'proj-6', name: 'API Integration', epicNumber: 'EPIC-006', revopsTeam: 'GTMO Commercial', function: 'Medium', startDate: '2024-04-15', endDate: '2024-05-30', assignee: 'Dev Team A', support: 'DevOps', dependencies: 'Develop Core Features', progress: 50 },
+    { id: 'proj-3', name: 'User Testing & Feedback', epicNumber: 'EPIC-003', revopsTeam: 'QA & UX', function: 'Medium', startDate: '2024-06-16', endDate: '2024-07-31', assignee: 'Test Group, UX Designer', support: 'Analytics', dependencies: 'Develop Core Features', progress: 20 },
+    { id: 'proj-4', name: 'Marketing Launch Campaign', epicNumber: 'EPIC-004', revopsTeam: 'Marketing', function: 'High', startDate: '2024-08-01', endDate: '2024-09-15', assignee: 'Marketing Team', support: 'Sales', dependencies: 'Develop Core Features', progress: 0 },
+    { id: 'proj-5', name: 'Q4 Feature Enhancements', epicNumber: 'EPIC-005', revopsTeam: 'Salesforce Commercial', function: 'Low', startDate: '2024-10-01', endDate: '2024-11-30', assignee: 'Dev Team B', support: 'Architecture', dependencies: 'User Testing & Feedback', progress: 0 },
 ];
 
 export default function Home() {
@@ -45,8 +45,8 @@ export default function Home() {
   const { toast } = useToast();
 
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
-  const [selectedOwners, setSelectedOwners] = useState<string[]>([]);
-  const [selectedImpacts, setSelectedImpacts] = useState<string[]>([]);
+  const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
+  const [selectedFunctions, setSelectedFunctions] = useState<string[]>([]);
   const [selectedSupport, setSelectedSupport] = useState<string[]>([]);
   const [selectedDependencies, setSelectedDependencies] = useState<string[]>([]);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -54,25 +54,25 @@ export default function Home() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
   
-  const [selectedOwnersForChart, setSelectedOwnersForChart] = useState<string[]>([]);
+  const [selectedAssigneesForChart, setSelectedAssigneesForChart] = useState<string[]>([]);
 
-  const { allTeams, allImpacts, allOwners, allSupport, allDependencies, allYears } = useMemo(() => {
+  const { allTeams, allFunctions, allAssignees, allSupport, allDependencies, allYears } = useMemo(() => {
     const teamsSet = new Set<string>();
-    const impactsSet = new Set<string>();
-    const ownersSet = new Set<string>();
+    const functionsSet = new Set<string>();
+    const assigneesSet = new Set<string>();
     const supportSet = new Set<string>();
     const dependenciesSet = new Set<string>();
     const yearsSet = new Set<number>();
 
     for (const project of projects) {
-      if (project.team) teamsSet.add(project.team);
-      project.impact?.split(',').forEach(i => {
+      if (project.revopsTeam) teamsSet.add(project.revopsTeam);
+      project.function?.split(',').forEach(i => {
         const trimmed = i.trim();
-        if (trimmed) impactsSet.add(trimmed);
+        if (trimmed) functionsSet.add(trimmed);
       });
-      project.owner?.split(',').forEach(o => {
+      project.assignee?.split(',').forEach(o => {
         const trimmed = o.trim();
-        if (trimmed) ownersSet.add(trimmed);
+        if (trimmed) assigneesSet.add(trimmed);
       });
       project.support?.split(',').forEach(s => {
         const trimmed = s.trim();
@@ -94,8 +94,8 @@ export default function Home() {
 
     return {
       allTeams: [...teamsSet].sort(),
-      allImpacts: [...impactsSet].sort(),
-      allOwners: [...ownersSet].sort(),
+      allFunctions: [...functionsSet].sort(),
+      allAssignees: [...assigneesSet].sort(),
       allSupport: [...supportSet].sort(),
       allDependencies: [...dependenciesSet].sort(),
       allYears: Array.from(yearsSet).sort((a, b) => a - b),
@@ -108,7 +108,7 @@ export default function Home() {
     }
   }, [allYears, selectedYear]);
 
-  const hasActiveFilters = selectedTeams.length > 0 || selectedOwners.length > 0 || selectedImpacts.length > 0 || selectedSupport.length > 0 || selectedDependencies.length > 0;
+  const hasActiveFilters = selectedTeams.length > 0 || selectedAssignees.length > 0 || selectedFunctions.length > 0 || selectedSupport.length > 0 || selectedDependencies.length > 0;
   
   const filteredProjects = useMemo(() => {
     return projects.filter(project => {
@@ -133,16 +133,16 @@ export default function Home() {
             return true; // No other filters active, so if year matches, include it
         }
 
-        const teamMatch = selectedTeams.length === 0 || selectedTeams.includes(project.team);
-        const impactMatch = selectedImpacts.length === 0 || (project.impact || "").split(',').map(i => i.trim()).filter(Boolean).some(i => selectedImpacts.includes(i));
-        const ownerMatch = selectedOwners.length === 0 || (project.owner || "").split(',').map(r => r.trim()).filter(Boolean).some(r => selectedOwners.includes(r));
+        const teamMatch = selectedTeams.length === 0 || selectedTeams.includes(project.revopsTeam);
+        const functionMatch = selectedFunctions.length === 0 || (project.function || "").split(',').map(i => i.trim()).filter(Boolean).some(i => selectedFunctions.includes(i));
+        const assigneeMatch = selectedAssignees.length === 0 || (project.assignee || "").split(',').map(r => r.trim()).filter(Boolean).some(r => selectedAssignees.includes(r));
         const supportMatch = selectedSupport.length === 0 || (project.support || "").split(',').map(s => s.trim()).filter(Boolean).some(s => selectedSupport.includes(s));
         const dependencyMatch = selectedDependencies.length === 0 || (project.dependencies || "").split(',').map(d => d.trim()).filter(Boolean).some(d => selectedDependencies.includes(d));
 
         const activeFilterCategories = [
             selectedTeams.length > 0,
-            selectedImpacts.length > 0,
-            selectedOwners.length > 0,
+            selectedFunctions.length > 0,
+            selectedAssignees.length > 0,
             selectedSupport.length > 0,
             selectedDependencies.length > 0
         ].filter(Boolean).length;
@@ -150,8 +150,8 @@ export default function Home() {
         if (activeFilterCategories > 0) {
             const matches = [];
             if (selectedTeams.length > 0) matches.push(teamMatch);
-            if (selectedImpacts.length > 0) matches.push(impactMatch);
-            if (selectedOwners.length > 0) matches.push(ownerMatch);
+            if (selectedFunctions.length > 0) matches.push(functionMatch);
+            if (selectedAssignees.length > 0) matches.push(assigneeMatch);
             if (selectedSupport.length > 0) matches.push(supportMatch);
             if (selectedDependencies.length > 0) matches.push(dependencyMatch);
             return matches.some(match => match);
@@ -159,7 +159,7 @@ export default function Home() {
 
         return true;
     });
-  }, [projects, selectedYear, selectedTeams, selectedOwners, selectedImpacts, selectedSupport, selectedDependencies, hasActiveFilters]);
+  }, [projects, selectedYear, selectedTeams, selectedAssignees, selectedFunctions, selectedSupport, selectedDependencies, hasActiveFilters]);
 
   const handleProjectSave = (data: ProjectFormValues, projectId?: string) => {
     if (projectId) {
@@ -169,8 +169,8 @@ export default function Home() {
         ...data,
         startDate: format(data.startDate, "yyyy-MM-dd"),
         endDate: format(data.endDate, "yyyy-MM-dd"),
-        impact: data.impact || "",
-        owner: data.owner || "",
+        function: data.function || "",
+        assignee: data.assignee || "",
         support: data.support || "",
         dependencies: data.dependencies || "",
         progress: data.progress || 0,
@@ -183,8 +183,8 @@ export default function Home() {
         ...data,
         startDate: format(data.startDate, "yyyy-MM-dd"),
         endDate: format(data.endDate, "yyyy-MM-dd"),
-        impact: data.impact || "",
-        owner: data.owner || "",
+        function: data.function || "",
+        assignee: data.assignee || "",
         support: data.support || "",
         dependencies: data.dependencies || "",
         progress: data.progress || 0,
@@ -302,8 +302,8 @@ export default function Home() {
 
   const clearFilters = () => {
     setSelectedTeams([]);
-    setSelectedOwners([]);
-    setSelectedImpacts([]);
+    setSelectedAssignees([]);
+    setSelectedFunctions([]);
     setSelectedSupport([]);
     setSelectedDependencies([]);
   }
@@ -369,22 +369,22 @@ export default function Home() {
             <div className="flex flex-wrap items-center gap-4">
                 <h3 className="text-lg font-semibold font-headline">Filters</h3>
                 <MultiSelectFilter
-                    label="Teams"
+                    label="RevOps Team"
                     options={allTeams}
                     selectedValues={selectedTeams}
                     onSelectedValuesChange={setSelectedTeams}
                 />
                  <MultiSelectFilter
-                    label="Impact"
-                    options={allImpacts}
-                    selectedValues={selectedImpacts}
-                    onSelectedValuesChange={setSelectedImpacts}
+                    label="Function"
+                    options={allFunctions}
+                    selectedValues={selectedFunctions}
+                    onSelectedValuesChange={setSelectedFunctions}
                 />
                 <MultiSelectFilter
-                    label="Owner"
-                    options={allOwners}
-                    selectedValues={selectedOwners}
-                    onSelectedValuesChange={setSelectedOwners}
+                    label="Assignee"
+                    options={allAssignees}
+                    selectedValues={selectedAssignees}
+                    onSelectedValuesChange={setSelectedAssignees}
                 />
                  <MultiSelectFilter
                     label="Support"
@@ -460,16 +460,16 @@ export default function Home() {
            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
               <div className="flex-1">
                 <h2 className="text-xl font-bold font-headline">Resource Allocation</h2>
-                <p className="text-muted-foreground text-sm">Number of projects assigned per owner each month.</p>
+                <p className="text-muted-foreground text-sm">Number of projects assigned per assignee each month.</p>
               </div>
               <MultiSelectFilter
-                  label="Filter Owners"
-                  options={allOwners}
-                  selectedValues={selectedOwnersForChart}
-                  onSelectedValuesChange={setSelectedOwnersForChart}
+                  label="Filter Assignees"
+                  options={allAssignees}
+                  selectedValues={selectedAssigneesForChart}
+                  onSelectedValuesChange={setSelectedAssigneesForChart}
               />
            </div>
-          <ResourceAllocationChart projects={filteredProjects} selectedOwners={selectedOwnersForChart}/>
+          <ResourceAllocationChart projects={filteredProjects} selectedAssignees={selectedAssigneesForChart}/>
         </div>
 
       </main>

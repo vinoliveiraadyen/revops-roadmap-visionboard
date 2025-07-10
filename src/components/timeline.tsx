@@ -70,7 +70,7 @@ const TimelineProject = ({ project, year, rowIndex, onDelete, onEdit, getTeamCol
 
   const left = (clampedStartDay / totalDays) * 100;
   const width = (clampedDuration / totalDays) * 100;
-  const teamColor = getTeamColor(project.team);
+  const teamColor = getTeamColor(project.revopsTeam);
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     e.dataTransfer.setData("projectId", project.id);
@@ -99,7 +99,7 @@ const TimelineProject = ({ project, year, rowIndex, onDelete, onEdit, getTeamCol
             style={{ width: `${project.progress || 0}%`, backgroundColor: teamColor }}
           />
           <p className="text-sm font-medium truncate relative">{project.name}</p>
-          <p className="text-xs text-muted-foreground truncate relative">{project.owner}</p>
+          <p className="text-xs text-muted-foreground truncate relative">{project.assignee}</p>
         </div>
       </PopoverTrigger>
       <PopoverContent className="w-80">
@@ -150,12 +150,12 @@ const TimelineProject = ({ project, year, rowIndex, onDelete, onEdit, getTeamCol
                   className="h-2.5 w-2.5 rounded-full"
                   style={{ backgroundColor: teamColor }}
                 />
-                <span>{project.team}</span>
+                <span>{project.revopsTeam}</span>
               </div>
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Zap className="h-4 w-4 flex-shrink-0" />
-              <span>Impact: {project.impact}</span>
+              <span>Function: {project.function}</span>
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Activity className="h-4 w-4 flex-shrink-0" />
@@ -163,7 +163,7 @@ const TimelineProject = ({ project, year, rowIndex, onDelete, onEdit, getTeamCol
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Briefcase className="h-4 w-4 flex-shrink-0" />
-              <span>{project.owner}</span>
+              <span>{project.assignee}</span>
             </div>
              <div className="flex items-center gap-2 text-muted-foreground">
               <LifeBuoy className="h-4 w-4 flex-shrink-0" />
@@ -236,7 +236,7 @@ export function Timeline({ projects, onProjectDelete, onProjectEdit, onProjectMo
   const timelineHeight = (rowCount * 3.5) + 9.5; // 3.5rem per row + padding
 
   const teamColorMap = React.useMemo(() => {
-    const uniqueTeams = [...new Set(projects.map(p => p.team).filter(Boolean))].sort();
+    const uniqueTeams = [...new Set(projects.map(p => p.revopsTeam).filter(Boolean))].sort();
     const map = new Map<string, string>();
     uniqueTeams.forEach((team, index) => {
       map.set(team, `hsl(${TEAM_COLORS[index % TEAM_COLORS.length]})`);
@@ -260,29 +260,20 @@ export function Timeline({ projects, onProjectDelete, onProjectEdit, onProjectMo
     if (!project) return;
 
     const timelineRect = e.currentTarget.getBoundingClientRect();
-    
-    // Convert drop position to a day of the year
-    const dropX = e.clientX - timelineRect.left;
-    let newVisualStartX = dropX - offsetInPixels;
-    newVisualStartX = Math.max(0, newVisualStartX); // Prevent dragging before timeline start
-
     const totalDaysInYear = getDaysInYear(new Date(displayYear, 0, 1));
     
-    const yearStartDate = startOfYear(new Date(displayYear, 0, 1));
-    const projectStart = parseISO(project.startDate);
+    // Calculate the number of days the cursor was moved
+    const dropX = e.clientX - timelineRect.left;
+    const dropDayOfYear = (dropX / timelineRect.width) * totalDaysInYear;
     
+    const offsetInDays = (offsetInPixels / timelineRect.width) * totalDaysInYear;
+    
+    const newStartDayOfYear = dropDayOfYear - offsetInDays;
+    
+    const projectStart = parseISO(project.startDate);
     const originalStartDayOfYear = differenceInCalendarDays(projectStart, startOfYear(projectStart));
-
-    let dayDelta;
-    if (getYear(projectStart) === displayYear) {
-      const originalVisualStartDay = differenceInCalendarDays(projectStart, yearStartDate);
-      const newVisualStartDay = (newVisualStartX / timelineRect.width) * totalDaysInYear;
-      dayDelta = newVisualStartDay - originalVisualStartDay;
-    } else {
-      const newVisualStartDay = (newVisualStartX / timelineRect.width) * totalDaysInYear;
-      const daysFromYearStartToProjectStart = differenceInCalendarDays(projectStart, yearStartDate);
-      dayDelta = newVisualStartDay - daysFromYearStartToProjectStart;
-    }
+    
+    const dayDelta = newStartDayOfYear - originalStartDayOfYear;
 
     const newStartDate = addDays(projectStart, dayDelta);
 

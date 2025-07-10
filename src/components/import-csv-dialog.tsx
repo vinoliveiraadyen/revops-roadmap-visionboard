@@ -51,8 +51,8 @@ export function ImportCsvDialog({ onProjectsAdd }: ImportCsvDialogProps) {
           const firstRowIsHeader = dataRows[0].some(cell => 
               /project name/i.test(cell) ||
               /epic number/i.test(cell) ||
-              /team/i.test(cell) ||
-              /impact/i.test(cell)
+              /revops team/i.test(cell) ||
+              /function/i.test(cell)
           );
 
           const projectsToParse = firstRowIsHeader ? dataRows.slice(1) : dataRows;
@@ -63,10 +63,10 @@ export function ImportCsvDialog({ onProjectsAdd }: ImportCsvDialogProps) {
 
           const newProjects: Project[] = projectsToParse.map((row, index) => {
             const rowIndexForError = firstRowIsHeader ? index + 2 : index + 1;
-            const [name, epicNumber, team, impact, owner, support, dependencies, startDateStr, endDateStr, progressStr] = row;
+            const [name, epicNumber, revopsTeam, functionValue, assignee, support, dependencies, startDateStr, endDateStr, progressStr] = row;
 
-            if (!name || !epicNumber || !team || !startDateStr || !endDateStr) {
-              throw new Error(`Row ${rowIndexForError} is incomplete. Project Name, Epic Number, Team, Start Date, and End Date are required.`);
+            if (!name || !epicNumber || !revopsTeam || !startDateStr || !endDateStr) {
+              throw new Error(`Row ${rowIndexForError} is incomplete. Project Name, Epic Number, RevOps Team, Start Date, and End Date are required.`);
             }
             
             const startDate = new Date(startDateStr);
@@ -85,9 +85,9 @@ export function ImportCsvDialog({ onProjectsAdd }: ImportCsvDialogProps) {
               id: `proj-${Date.now()}-${index}`,
               name,
               epicNumber,
-              team,
-              impact: impact || "",
-              owner: owner || "",
+              revopsTeam,
+              function: functionValue || "",
+              assignee: assignee || "",
               support: support || "",
               dependencies: dependencies || "",
               startDate: format(startDate, "yyyy-MM-dd"),
@@ -146,9 +146,9 @@ export function ImportCsvDialog({ onProjectsAdd }: ImportCsvDialogProps) {
                 <ol className="list-decimal list-inside mt-2 space-y-1">
                     <li>Project Name</li>
                     <li>Epic Number</li>
-                    <li>Team</li>
-                    <li>Impact</li>
-                    <li>Owner</li>
+                    <li>RevOps Team</li>
+                    <li>Function</li>
+                    <li>Assignee</li>
                     <li>Support</li>
                     <li>Dependencies</li>
                     <li>Start Date</li>

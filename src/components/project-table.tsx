@@ -41,10 +41,10 @@ export function ProjectTable({ projects, onProjectEdit, onProjectDelete, onDelet
           <TableRow>
             <TableHead className="w-[200px]">Project Name</TableHead>
             <TableHead>Epic</TableHead>
-            <TableHead>Team</TableHead>
-            <TableHead>Impact</TableHead>
+            <TableHead>RevOps Team</TableHead>
+            <TableHead>Function</TableHead>
             <TableHead>Progress</TableHead>
-            <TableHead>Owner</TableHead>
+            <TableHead>Assignee</TableHead>
             <TableHead>Support</TableHead>
             <TableHead>Dependencies</TableHead>
             <TableHead>Start Date</TableHead>
@@ -58,15 +58,15 @@ export function ProjectTable({ projects, onProjectEdit, onProjectDelete, onDelet
               <TableRow key={project.id}>
                 <TableCell className="font-medium">{project.name}</TableCell>
                 <TableCell>{project.epicNumber}</TableCell>
-                <TableCell>{project.team}</TableCell>
-                <TableCell>{project.impact}</TableCell>
+                <TableCell>{project.revopsTeam}</TableCell>
+                <TableCell>{project.function}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <Progress value={project.progress} className="w-24" />
                     <span className="text-muted-foreground text-xs">{project.progress || 0}%</span>
                   </div>
                 </TableCell>
-                <TableCell>{project.owner}</TableCell>
+                <TableCell>{project.assignee}</TableCell>
                 <TableCell>{project.support}</TableCell>
                 <TableCell>{project.dependencies}</TableCell>
                 <TableCell>{project.startDate}</TableCell>

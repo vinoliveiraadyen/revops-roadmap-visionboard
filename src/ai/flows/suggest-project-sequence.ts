@@ -15,11 +15,11 @@ import {z} from 'genkit';
 const ProjectSchema = z.object({
   name: z.string().describe('The name of the project.'),
   epicNumber: z.string().describe('The epic number associated with the project.'),
-  team: z.string().describe('The team responsible for the project.'),
-  impact: z.string().optional().describe('The business impact of the project (e.g., High, Medium, Low).'),
+  revopsTeam: z.string().describe('The RevOps team responsible for the project.'),
+  function: z.string().optional().describe('The business function of the project (e.g., High, Medium, Low).'),
   startDate: z.string().describe('The start date of the project (ISO format).'),
   endDate: z.string().describe('The end date of the project (ISO format).'),
-  owner: z.string().optional().describe('The owner of the project.'),
+  assignee: z.string().optional().describe('The assignee of the project.'),
   support: z.string().optional().describe('The support team or person for the project.'),
   dependencies: z.string().optional().describe('The project dependencies (names of other projects).'),
   progress: z.number().optional().describe('The completion progress of the project from 0 to 100.'),
@@ -59,11 +59,11 @@ const prompt = ai.definePrompt({
   {{#each projects}}
   - Name: {{this.name}}
     Epic Number: {{this.epicNumber}}
-    Team: {{this.team}}
-    Impact: {{this.impact}}
+    RevOps Team: {{this.revopsTeam}}
+    Function: {{this.function}}
     Start Date: {{this.startDate}}
     End Date: {{this.endDate}}
-    Owner: {{this.owner}}
+    Assignee: {{this.assignee}}
     Support: {{this.support}}
     Dependencies: {{this.dependencies}}
     Progress: {{this.progress}}

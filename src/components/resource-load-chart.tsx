@@ -13,24 +13,24 @@ const sanitizeForCssIdentifier = (name: string) => {
     return name.replace(/[^a-zA-Z0-9]/g, '_');
 }
 
-export function ResourceAllocationChart({ projects, selectedOwners }: { projects: Project[]; selectedOwners?: string[] }) {
-    const { chartData, ownersToDisplay, year } = useMemo(() => {
+export function ResourceAllocationChart({ projects, selectedAssignees }: { projects: Project[]; selectedAssignees?: string[] }) {
+    const { chartData, assigneesToDisplay, year } = useMemo(() => {
         if (!projects || projects.length === 0) {
-            return { chartData: [], ownersToDisplay: [], year: new Date().getFullYear() };
+            return { chartData: [], assigneesToDisplay: [], year: new Date().getFullYear() };
         }
 
-        const ownersSet = new Set<string>();
+        const assigneesSet = new Set<string>();
         projects.forEach(p => {
-            p.owner.split(',').forEach(r => {
+            p.assignee.split(',').forEach(r => {
                 const trimmed = r.trim();
-                if(trimmed) ownersSet.add(trimmed);
+                if(trimmed) assigneesSet.add(trimmed);
             });
         });
-        const allOwners = [...ownersSet].sort();
+        const allAssignees = [...assigneesSet].sort();
 
-        const ownersToDisplay = selectedOwners && selectedOwners.length > 0 
-            ? allOwners.filter(o => selectedOwners.includes(o)) 
-            : allOwners;
+        const assigneesToDisplay = selectedAssignees && selectedAssignees.length > 0 
+            ? allAssignees.filter(o => selectedAssignees.includes(o)) 
+            : allAssignees;
 
         const firstProjectWithDate = projects.find(p => p.startDate);
         const displayYear = firstProjectWithDate ? getYear(parseISO(firstProjectWithDate.startDate)) : new Date().getFullYear();
@@ -45,9 +45,9 @@ export function ResourceAllocationChart({ projects, selectedOwners }: { projects
                 name: format(month, 'MMM'),
             };
 
-            // Initialize all sanitized owners with 0 for this month
-            ownersToDisplay.forEach(owner => {
-                monthData[sanitizeForCssIdentifier(owner)] = 0;
+            // Initialize all sanitized assignees with 0 for this month
+            assigneesToDisplay.forEach(assignee => {
+                monthData[sanitizeForCssIdentifier(assignee)] = 0;
             });
 
             projects.forEach(project => {
@@ -58,11 +58,11 @@ export function ResourceAllocationChart({ projects, selectedOwners }: { projects
                     const monthEnd = endOfMonth(month);
 
                     if (projectStart <= monthEnd && projectEnd >= monthStart) {
-                        project.owner.split(',').map(r => r.trim()).forEach(owner => {
-                            if (!owner) return;
-                            const sanitizedOwner = sanitizeForCssIdentifier(owner);
-                            if (monthData.hasOwnProperty(sanitizedOwner)) {
-                                (monthData[sanitizedOwner] as number) += 1;
+                        project.assignee.split(',').map(r => r.trim()).forEach(assignee => {
+                            if (!assignee) return;
+                            const sanitizedAssignee = sanitizeForCssIdentifier(assignee);
+                            if (monthData.hasOwnProperty(sanitizedAssignee)) {
+                                (monthData[sanitizedAssignee] as number) += 1;
                             }
                         });
                     }
@@ -74,22 +74,22 @@ export function ResourceAllocationChart({ projects, selectedOwners }: { projects
             return monthData;
         });
 
-        return { chartData: data, ownersToDisplay, year: displayYear };
-    }, [projects, selectedOwners]);
+        return { chartData: data, assigneesToDisplay, year: displayYear };
+    }, [projects, selectedAssignees]);
     
     const chartConfig = useMemo(() => {
         const config: ChartConfig = {};
-        ownersToDisplay.forEach((owner, index) => {
+        assigneesToDisplay.forEach((assignee, index) => {
             // Use the sanitized key for the config, but the original name for the label
-            config[sanitizeForCssIdentifier(owner)] = {
-                label: owner,
+            config[sanitizeForCssIdentifier(assignee)] = {
+                label: assignee,
                 color: `hsl(var(--chart-${(index % 5) + 1}))`,
             };
         });
         return config as ChartConfig;
-    }, [ownersToDisplay]);
+    }, [assigneesToDisplay]);
 
-    if (chartData.length === 0 || ownersToDisplay.length === 0) {
+    if (chartData.length === 0 || assigneesToDisplay.length === 0) {
         return (
             <div className="flex h-[300px] items-center justify-center rounded-lg border border-dashed">
                 <p className="text-muted-foreground text-center p-4">
@@ -119,15 +119,15 @@ export function ResourceAllocationChart({ projects, selectedOwners }: { projects
                   cursor={false}
                   content={<ChartTooltipContent indicator="dot" />}
                 />
-                <ChartLegend content={<ChartLegendContent />} />
-                {ownersToDisplay.map((owner) => {
-                    const sanitizedOwner = sanitizeForCssIdentifier(owner);
+                <ChartLegend content={<ChartLegendContent wrapperStyle={{ display: 'flex', flexWrap: 'wrap' }} />} />
+                {assigneesToDisplay.map((assignee) => {
+                    const sanitizedAssignee = sanitizeForCssIdentifier(assignee);
                     return (
                         <Bar
-                            key={sanitizedOwner}
-                            dataKey={sanitizedOwner}
+                            key={sanitizedAssignee}
+                            dataKey={sanitizedAssignee}
                             stackId="a"
-                            fill={`var(--color-${sanitizedOwner})`}
+                            fill={`var(--color-${sanitizedAssignee})`}
                             radius={[4, 4, 0, 0]}
                         />
                     )

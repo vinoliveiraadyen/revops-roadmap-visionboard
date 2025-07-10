@@ -29,11 +29,11 @@ export function ProjectCard({ project, onDragStart }: ProjectCardProps) {
       <CardContent className="space-y-3 text-sm">
         <div className="flex items-center gap-2 text-muted-foreground">
           <Users className="h-4 w-4 flex-shrink-0" />
-          <span>{project.team}</span>
+          <span>{project.revopsTeam}</span>
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Briefcase className="h-4 w-4 flex-shrink-0" />
-          <span>{project.owner}</span>
+          <span>{project.assignee}</span>
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <LifeBuoy className="h-4 w-4 flex-shrink-0" />
