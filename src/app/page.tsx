@@ -55,6 +55,7 @@ export default function Home() {
   const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
   
   const [selectedAssigneesForChart, setSelectedAssigneesForChart] = useState<string[]>([]);
+  const [selectedSupportForChart, setSelectedSupportForChart] = useState<string[]>([]);
 
   const { allTeams, allFunctions, allAssignees, allSupport, allDependencies, allYears } = useMemo(() => {
     const teamsSet = new Set<string>();
@@ -76,7 +77,7 @@ export default function Home() {
       });
       project.support?.split(',').forEach(s => {
         const trimmed = s.trim();
-        if (trimmed) supportSet.add(trimmed);
+        if (trimmed) supportSet.add(s.trim());
       });
       project.dependencies?.split(',').forEach(d => {
         const trimmed = d.trim();
@@ -460,16 +461,28 @@ export default function Home() {
            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
               <div className="flex-1">
                 <h2 className="text-xl font-bold font-headline">Resource Allocation</h2>
-                <p className="text-muted-foreground text-sm">Number of projects assigned per assignee each month.</p>
+                <p className="text-muted-foreground text-sm">Number of projects assigned per Assignee and Support each month.</p>
               </div>
-              <MultiSelectFilter
-                  label="Filter Assignees"
-                  options={allAssignees}
-                  selectedValues={selectedAssigneesForChart}
-                  onSelectedValuesChange={setSelectedAssigneesForChart}
-              />
+              <div className="flex flex-wrap gap-2">
+                <MultiSelectFilter
+                    label="Filter Assignees"
+                    options={allAssignees}
+                    selectedValues={selectedAssigneesForChart}
+                    onSelectedValuesChange={setSelectedAssigneesForChart}
+                />
+                <MultiSelectFilter
+                    label="Filter Support"
+                    options={allSupport}
+                    selectedValues={selectedSupportForChart}
+                    onSelectedValuesChange={setSelectedSupportForChart}
+                />
+              </div>
            </div>
-          <ResourceAllocationChart projects={filteredProjects} selectedAssignees={selectedAssigneesForChart}/>
+          <ResourceAllocationChart 
+            projects={filteredProjects} 
+            selectedAssignees={selectedAssigneesForChart}
+            selectedSupport={selectedSupportForChart}
+          />
         </div>
 
       </main>
