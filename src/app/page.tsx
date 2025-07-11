@@ -29,13 +29,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const initialProjects: Project[] = [
-    { id: 'proj-1', name: 'Initial Planning & Research', epicNumber: 'EPIC-001', revopsTeam: 'Strategy', function: 'High', startDate: '2024-01-15', endDate: '2024-02-28', assignee: 'PM, UX Researcher', support: 'IT', dependencies: '', progress: 100 },
-    { id: 'proj-2', name: 'Develop Core Features', epicNumber: 'EPIC-002', revopsTeam: 'Engineering', function: 'High', startDate: '2024-03-01', endDate: '2024-06-15', assignee: 'Dev Team A, QA', support: 'Architecture', dependencies: 'Initial Planning & Research', progress: 75 },
-    { id: 'proj-7', name: 'Mobile App Design', epicNumber: 'EPIC-007', revopsTeam: 'Design', function: 'Medium', startDate: '2024-02-01', endDate: '2024-04-30', assignee: 'UI/UX Designer', support: 'Design System Team', dependencies: 'Initial Planning & Research', progress: 90 },
-    { id: 'proj-6', name: 'API Integration', epicNumber: 'EPIC-006', revopsTeam: 'GTMO Commercial', function: 'Medium', startDate: '2024-04-15', endDate: '2024-05-30', assignee: 'Dev Team A', support: 'DevOps', dependencies: 'Develop Core Features', progress: 50 },
-    { id: 'proj-3', name: 'User Testing & Feedback', epicNumber: 'EPIC-003', revopsTeam: 'QA & UX', function: 'Medium', startDate: '2024-06-16', endDate: '2024-07-31', assignee: 'Test Group, UX Designer', support: 'Analytics', dependencies: 'Develop Core Features', progress: 20 },
-    { id: 'proj-4', name: 'Marketing Launch Campaign', epicNumber: 'EPIC-004', revopsTeam: 'Marketing', function: 'High', startDate: '2024-08-01', endDate: '2024-09-15', assignee: 'Marketing Team', support: 'Sales', dependencies: 'Develop Core Features', progress: 0 },
-    { id: 'proj-5', name: 'Q4 Feature Enhancements', epicNumber: 'EPIC-005', revopsTeam: 'Salesforce Commercial', function: 'Low', startDate: '2024-10-01', endDate: '2024-11-30', assignee: 'Dev Team B', support: 'Architecture', dependencies: 'User Testing & Feedback', progress: 0 },
+    { id: 'proj-1', name: 'Initial Planning & Research', epicNumber: 'EPIC-001', revopsTeam: 'Strategy', function: 'High', startDate: '2024-01-15', endDate: '2024-02-28', assignee: 'PM, UX Researcher', support: 'IT', dependencies: '', progress: 100, ragStatus: 'Green' },
+    { id: 'proj-2', name: 'Develop Core Features', epicNumber: 'EPIC-002', revopsTeam: 'Engineering', function: 'High', startDate: '2024-03-01', endDate: '2024-06-15', assignee: 'Dev Team A, QA', support: 'Architecture', dependencies: 'Initial Planning & Research', progress: 75, ragStatus: 'Green' },
+    { id: 'proj-7', name: 'Mobile App Design', epicNumber: 'EPIC-007', revopsTeam: 'Design', function: 'Medium', startDate: '2024-02-01', endDate: '2024-04-30', assignee: 'UI/UX Designer', support: 'Design System Team', dependencies: 'Initial Planning & Research', progress: 90, ragStatus: 'Amber' },
+    { id: 'proj-6', name: 'API Integration', epicNumber: 'EPIC-006', revopsTeam: 'GTMO Commercial', function: 'Medium', startDate: '2024-04-15', endDate: '2024-05-30', assignee: 'Dev Team A', support: 'DevOps', dependencies: 'Develop Core Features', progress: 50, ragStatus: 'Red' },
+    { id: 'proj-3', name: 'User Testing & Feedback', epicNumber: 'EPIC-003', revopsTeam: 'QA & UX', function: 'Medium', startDate: '2024-06-16', endDate: '2024-07-31', assignee: 'Test Group, UX Designer', support: 'Analytics', dependencies: 'Develop Core Features', progress: 20, ragStatus: 'Green' },
+    { id: 'proj-4', name: 'Marketing Launch Campaign', epicNumber: 'EPIC-004', revopsTeam: 'Marketing', function: 'High', startDate: '2024-08-01', endDate: '2024-09-15', assignee: 'Marketing Team', support: 'Sales', dependencies: 'Develop Core Features', progress: 0, ragStatus: 'Green' },
+    { id: 'proj-5', name: 'Q4 Feature Enhancements', epicNumber: 'EPIC-005', revopsTeam: 'Salesforce Commercial', function: 'Low', startDate: '2024-10-01', endDate: '2024-11-30', assignee: 'Dev Team B', support: 'Architecture', dependencies: 'User Testing & Feedback', progress: 0, ragStatus: 'Amber' },
 ];
 
 export default function Home() {
@@ -49,6 +49,7 @@ export default function Home() {
   const [selectedFunctions, setSelectedFunctions] = useState<string[]>([]);
   const [selectedSupport, setSelectedSupport] = useState<string[]>([]);
   const [selectedDependencies, setSelectedDependencies] = useState<string[]>([]);
+  const [selectedRagStatus, setSelectedRagStatus] = useState<string[]>([]);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -57,13 +58,14 @@ export default function Home() {
   const [selectedAssigneesForChart, setSelectedAssigneesForChart] = useState<string[]>([]);
   const [selectedSupportForChart, setSelectedSupportForChart] = useState<string[]>([]);
 
-  const { allTeams, allFunctions, allAssignees, allSupport, allDependencies, allYears } = useMemo(() => {
+  const { allTeams, allFunctions, allAssignees, allSupport, allDependencies, allYears, allRagStatuses } = useMemo(() => {
     const teamsSet = new Set<string>();
     const functionsSet = new Set<string>();
     const assigneesSet = new Set<string>();
     const supportSet = new Set<string>();
     const dependenciesSet = new Set<string>();
     const yearsSet = new Set<number>();
+    const ragStatusSet = new Set<string>();
 
     for (const project of projects) {
       if (project.revopsTeam) teamsSet.add(project.revopsTeam);
@@ -83,6 +85,8 @@ export default function Home() {
         const trimmed = d.trim();
         if (trimmed && trimmed.toLowerCase() !== 'none') dependenciesSet.add(trimmed);
       });
+      if (project.ragStatus) ragStatusSet.add(project.ragStatus);
+
       try {
         if (project.startDate) yearsSet.add(getYear(parseISO(project.startDate)));
         if (project.endDate) yearsSet.add(getYear(parseISO(project.endDate)));
@@ -100,6 +104,7 @@ export default function Home() {
       allSupport: [...supportSet].sort(),
       allDependencies: [...dependenciesSet].sort(),
       allYears: Array.from(yearsSet).sort((a, b) => a - b),
+      allRagStatuses: ['Green', 'Amber', 'Red'], // Fixed order
     };
   }, [projects]);
   
@@ -109,7 +114,7 @@ export default function Home() {
     }
   }, [allYears, selectedYear]);
 
-  const hasActiveFilters = selectedTeams.length > 0 || selectedAssignees.length > 0 || selectedFunctions.length > 0 || selectedSupport.length > 0 || selectedDependencies.length > 0;
+  const hasActiveFilters = selectedTeams.length > 0 || selectedAssignees.length > 0 || selectedFunctions.length > 0 || selectedSupport.length > 0 || selectedDependencies.length > 0 || selectedRagStatus.length > 0;
   
   const filteredProjects = useMemo(() => {
     return projects.filter(project => {
@@ -139,13 +144,16 @@ export default function Home() {
         const assigneeMatch = selectedAssignees.length === 0 || (project.assignee || "").split(',').map(r => r.trim()).filter(Boolean).some(r => selectedAssignees.includes(r));
         const supportMatch = selectedSupport.length === 0 || (project.support || "").split(',').map(s => s.trim()).filter(Boolean).some(s => selectedSupport.includes(s));
         const dependencyMatch = selectedDependencies.length === 0 || (project.dependencies || "").split(',').map(d => d.trim()).filter(Boolean).some(d => selectedDependencies.includes(d));
+        const ragStatusMatch = selectedRagStatus.length === 0 || (project.ragStatus ? selectedRagStatus.includes(project.ragStatus) : false);
+
 
         const activeFilterCategories = [
             selectedTeams.length > 0,
             selectedFunctions.length > 0,
             selectedAssignees.length > 0,
             selectedSupport.length > 0,
-            selectedDependencies.length > 0
+            selectedDependencies.length > 0,
+            selectedRagStatus.length > 0
         ].filter(Boolean).length;
 
         if (activeFilterCategories > 0) {
@@ -155,12 +163,13 @@ export default function Home() {
             if (selectedAssignees.length > 0) matches.push(assigneeMatch);
             if (selectedSupport.length > 0) matches.push(supportMatch);
             if (selectedDependencies.length > 0) matches.push(dependencyMatch);
+            if (selectedRagStatus.length > 0) matches.push(ragStatusMatch);
             return matches.some(match => match);
         }
 
         return true;
     });
-  }, [projects, selectedYear, selectedTeams, selectedAssignees, selectedFunctions, selectedSupport, selectedDependencies, hasActiveFilters]);
+  }, [projects, selectedYear, selectedTeams, selectedAssignees, selectedFunctions, selectedSupport, selectedDependencies, selectedRagStatus, hasActiveFilters]);
 
   const handleProjectSave = (data: ProjectFormValues, projectId?: string) => {
     if (projectId) {
@@ -175,6 +184,7 @@ export default function Home() {
         support: data.support || "",
         dependencies: data.dependencies || "",
         progress: data.progress || 0,
+        ragStatus: data.ragStatus || '',
       } : p));
       toast({ title: "Project Updated", description: `"${data.name}" has been successfully updated.` });
     } else {
@@ -189,6 +199,7 @@ export default function Home() {
         support: data.support || "",
         dependencies: data.dependencies || "",
         progress: data.progress || 0,
+        ragStatus: data.ragStatus || '',
       };
       setProjects(prev => [...prev, newProject]);
       toast({ title: "Project Added", description: `"${data.name}" has been successfully created.` });
@@ -307,6 +318,7 @@ export default function Home() {
     setSelectedFunctions([]);
     setSelectedSupport([]);
     setSelectedDependencies([]);
+    setSelectedRagStatus([]);
   }
   
   return (
@@ -398,6 +410,12 @@ export default function Home() {
                     options={allDependencies}
                     selectedValues={selectedDependencies}
                     onSelectedValuesChange={setSelectedDependencies}
+                />
+                <MultiSelectFilter
+                    label="RAG Status"
+                    options={allRagStatuses}
+                    selectedValues={selectedRagStatus}
+                    onSelectedValuesChange={setSelectedRagStatus}
                 />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

@@ -25,12 +25,13 @@ export function ExportCsvButton({ projects, fileName = "projects.csv" }: ExportC
       "Start Date": p.startDate,
       "End Date": p.endDate,
       "Progress": p.progress || 0,
+      "RAG Status": p.ragStatus,
     }));
     
     // Convert JSON to CSV string. The `columns` option ensures the header order.
     const csv = Papa.unparse(dataToExport, {
         header: true,
-        columns: ["Project Name", "Epic Number", "RevOps Team", "Function", "Assignee", "Support", "Dependencies", "Start Date", "End Date", "Progress"]
+        columns: ["Project Name", "Epic Number", "RevOps Team", "Function", "Assignee", "Support", "Dependencies", "Start Date", "End Date", "Progress", "RAG Status"]
     });
     
     // Create a Blob and trigger a download

@@ -52,7 +52,8 @@ export function ImportCsvDialog({ onProjectsAdd }: ImportCsvDialogProps) {
               /project name/i.test(cell) ||
               /epic number/i.test(cell) ||
               /revops team/i.test(cell) ||
-              /function/i.test(cell)
+              /function/i.test(cell) ||
+              /rag status/i.test(cell)
           );
 
           const projectsToParse = firstRowIsHeader ? dataRows.slice(1) : dataRows;
@@ -63,7 +64,7 @@ export function ImportCsvDialog({ onProjectsAdd }: ImportCsvDialogProps) {
 
           const newProjects: Project[] = projectsToParse.map((row, index) => {
             const rowIndexForError = firstRowIsHeader ? index + 2 : index + 1;
-            const [name, epicNumber, revopsTeam, functionValue, assignee, support, dependencies, startDateStr, endDateStr, progressStr] = row;
+            const [name, epicNumber, revopsTeam, functionValue, assignee, support, dependencies, startDateStr, endDateStr, progressStr, ragStatus] = row;
 
             if (!name || !epicNumber || !revopsTeam || !startDateStr || !endDateStr) {
               throw new Error(`Row ${rowIndexForError} is incomplete. Project Name, Epic Number, RevOps Team, Start Date, and End Date are required.`);
@@ -93,6 +94,7 @@ export function ImportCsvDialog({ onProjectsAdd }: ImportCsvDialogProps) {
               startDate: format(startDate, "yyyy-MM-dd"),
               endDate: format(endDate, "yyyy-MM-dd"),
               progress,
+              ragStatus: ragStatus || "",
             };
           });
 
@@ -154,6 +156,7 @@ export function ImportCsvDialog({ onProjectsAdd }: ImportCsvDialogProps) {
                     <li>Start Date</li>
                     <li>End Date</li>
                     <li>Progress (0-100)</li>
+                    <li>RAG Status (Red, Amber, Green)</li>
                 </ol>
                  <p className="mt-2 text-xs">A header row is optional and will be skipped if detected.</p>
             </div>

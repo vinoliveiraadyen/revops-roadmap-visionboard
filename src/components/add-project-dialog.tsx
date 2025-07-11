@@ -32,6 +32,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import type { Project } from "@/lib/types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 const projectSchema = z.object({
   name: z.string().min(1, "Project name is required"),
@@ -47,6 +48,7 @@ const projectSchema = z.object({
     (val) => (val === "" ? undefined : val),
     z.coerce.number().min(0, "Must be 0 or more.").max(100, "Must be 100 or less.").optional()
   ),
+  ragStatus: z.string().optional(),
 });
 
 export type ProjectFormValues = z.infer<typeof projectSchema>;
@@ -81,6 +83,7 @@ export function AddProjectDialog({ onSave, projectToEdit, children, open, onOpen
       support: "",
       dependencies: "",
       progress: undefined,
+      ragStatus: "",
     },
   });
 
@@ -104,6 +107,7 @@ export function AddProjectDialog({ onSave, projectToEdit, children, open, onOpen
           startDate: undefined,
           endDate: undefined,
           progress: undefined,
+          ragStatus: "",
         });
       }
     }
@@ -180,19 +184,43 @@ export function AddProjectDialog({ onSave, projectToEdit, children, open, onOpen
                 )}
               />
             </div>
-            <FormField
-              control={form.control}
-              name="progress"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Progress (%)</FormLabel>
-                  <FormControl>
-                    <Input type="number" min="0" max="100" placeholder="e.g., 50" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="progress"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Progress (%)</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="0" max="100" placeholder="e.g., 50" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="ragStatus"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>RAG Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Green">Green</SelectItem>
+                        <SelectItem value="Amber">Amber</SelectItem>
+                        <SelectItem value="Red">Red</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}

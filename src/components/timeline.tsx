@@ -26,6 +26,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 // Helper function to get the total number of days in a year
 const getDaysInYear = (date: Date) => {
@@ -49,6 +50,12 @@ const TEAM_COLORS = [
     "25 95% 55%",  // Brighter Brownish Orange
 ];
 
+const RAG_STATUS_COLORS = {
+  Green: 'bg-green-500',
+  Amber: 'bg-amber-500',
+  Red: 'bg-red-500',
+};
+
 const TimelineProject = ({ project, year, rowIndex, onDelete, onEdit, getTeamColor }: { project: Project; year: number; rowIndex: number; onDelete: (projectId: string) => void; onEdit: (project: Project) => void; getTeamColor: (teamName: string) => string; }) => {
   const [popoverOpen, setPopoverOpen] = React.useState(false);
   const projectStart = parseISO(project.startDate);
@@ -59,11 +66,17 @@ const TimelineProject = ({ project, year, rowIndex, onDelete, onEdit, getTeamCol
   const yearStartDate = startOfYear(new Date(year, 0, 1));
   const totalDays = getDaysInYear(yearStartDate);
 
-  const startDay = differenceInCalendarDays(projectStart, yearStartDate);
-  const duration = differenceInCalendarDays(projectEnd, projectStart) + 1;
+  let startDay = differenceInCalendarDays(projectStart, yearStartDate);
   
+  // Adjust startDay if project starts in a previous year
+  if (getYear(projectStart) < year) {
+    startDay = 0;
+  }
+  
+  const endDay = differenceInCalendarDays(projectEnd, yearStartDate);
+
   const clampedStartDay = Math.max(0, startDay);
-  const clampedEndDay = Math.min(totalDays, startDay + duration);
+  const clampedEndDay = Math.min(totalDays, endDay + 1);
   const clampedDuration = clampedEndDay - clampedStartDay;
 
   if (clampedDuration <= 0) return null;
@@ -71,6 +84,7 @@ const TimelineProject = ({ project, year, rowIndex, onDelete, onEdit, getTeamCol
   const left = (clampedStartDay / totalDays) * 100;
   const width = (clampedDuration / totalDays) * 100;
   const teamColor = getTeamColor(project.revopsTeam);
+  const ragColorClass = project.ragStatus ? RAG_STATUS_COLORS[project.ragStatus] : 'bg-transparent';
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     e.dataTransfer.setData("projectId", project.id);
@@ -100,6 +114,9 @@ const TimelineProject = ({ project, year, rowIndex, onDelete, onEdit, getTeamCol
           />
           <p className="text-sm font-medium truncate relative">{project.name}</p>
           <p className="text-xs text-muted-foreground truncate relative">{project.assignee}</p>
+          {project.ragStatus && (
+            <div className={cn("absolute bottom-1 right-1 h-3 w-3 rounded-full", ragColorClass)} />
+          )}
         </div>
       </PopoverTrigger>
       <PopoverContent className="w-80">
@@ -161,6 +178,12 @@ const TimelineProject = ({ project, year, rowIndex, onDelete, onEdit, getTeamCol
               <Activity className="h-4 w-4 flex-shrink-0" />
               <span>Progress: {project.progress || 0}%</span>
             </div>
+             {project.ragStatus && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <div className={cn("h-3 w-3 rounded-full", ragColorClass)} />
+                <span>Status: {project.ragStatus}</span>
+              </div>
+            )}
             <div className="flex items-center gap-2 text-muted-foreground">
               <Briefcase className="h-4 w-4 flex-shrink-0" />
               <span>{project.assignee}</span>
@@ -268,12 +291,12 @@ export function Timeline({ projects, onProjectDelete, onProjectEdit, onProjectMo
     
     const offsetInDays = (offsetInPixels / timelineRect.width) * totalDaysInYear;
     
-    const newStartDayOfYear = dropDayOfYear - offsetInDays;
+    const newStartDayOfYearRaw = dropDayOfYear - offsetInDays;
     
     const projectStart = parseISO(project.startDate);
     const originalStartDayOfYear = differenceInCalendarDays(projectStart, startOfYear(projectStart));
     
-    const dayDelta = newStartDayOfYear - originalStartDayOfYear;
+    const dayDelta = newStartDayOfYearRaw - originalStartDayOfYear;
 
     const newStartDate = addDays(projectStart, dayDelta);
 

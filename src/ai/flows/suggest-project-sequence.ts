@@ -23,6 +23,7 @@ const ProjectSchema = z.object({
   support: z.string().optional().describe('The support team or person for the project.'),
   dependencies: z.string().optional().describe('The project dependencies (names of other projects).'),
   progress: z.number().optional().describe('The completion progress of the project from 0 to 100.'),
+  ragStatus: z.string().optional().describe('The RAG status of the project (Red, Amber, or Green).'),
 });
 
 export type Project = z.infer<typeof ProjectSchema>;
@@ -67,6 +68,7 @@ const prompt = ai.definePrompt({
     Support: {{this.support}}
     Dependencies: {{this.dependencies}}
     Progress: {{this.progress}}
+    RAG Status: {{this.ragStatus}}
   {{/each}}
 
   Team Availability: {{{teamAvailability}}}

@@ -25,6 +25,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 interface ProjectTableProps {
   projects: Project[];
@@ -34,6 +35,12 @@ interface ProjectTableProps {
 }
 
 export function ProjectTable({ projects, onProjectEdit, onProjectDelete, onDeleteAll }: ProjectTableProps) {
+  const ragStatusColor = {
+    Green: 'bg-green-500',
+    Amber: 'bg-amber-500',
+    Red: 'bg-red-500',
+  };
+
   return (
     <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
       <Table>
@@ -44,6 +51,7 @@ export function ProjectTable({ projects, onProjectEdit, onProjectDelete, onDelet
             <TableHead>RevOps Team</TableHead>
             <TableHead>Function</TableHead>
             <TableHead>Progress</TableHead>
+            <TableHead>RAG</TableHead>
             <TableHead>Assignee</TableHead>
             <TableHead>Support</TableHead>
             <TableHead>Dependencies</TableHead>
@@ -65,6 +73,14 @@ export function ProjectTable({ projects, onProjectEdit, onProjectDelete, onDelet
                     <Progress value={project.progress} className="w-24" />
                     <span className="text-muted-foreground text-xs">{project.progress || 0}%</span>
                   </div>
+                </TableCell>
+                <TableCell>
+                  {project.ragStatus && (
+                    <div className="flex items-center gap-2">
+                      <div className={cn("h-3 w-3 rounded-full", ragStatusColor[project.ragStatus as keyof typeof ragStatusColor])} />
+                      {project.ragStatus}
+                    </div>
+                  )}
                 </TableCell>
                 <TableCell>{project.assignee}</TableCell>
                 <TableCell>{project.support}</TableCell>
@@ -108,7 +124,7 @@ export function ProjectTable({ projects, onProjectEdit, onProjectDelete, onDelet
             ))
           ) : (
             <TableRow>
-                <TableCell colSpan={11} className="h-24 text-center">
+                <TableCell colSpan={12} className="h-24 text-center">
                     No projects found.
                 </TableCell>
             </TableRow>
@@ -116,7 +132,7 @@ export function ProjectTable({ projects, onProjectEdit, onProjectDelete, onDelet
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={11} className="text-right p-4">
+            <TableCell colSpan={12} className="text-right p-4">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button
