@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
+import { ArrowUpDown, Pencil, Trash2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,36 +27,59 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 
+export type SortConfig = {
+    key: keyof Project | null;
+    direction: 'ascending' | 'descending';
+};
+
 interface ProjectTableProps {
   projects: Project[];
   onProjectEdit: (project: Project) => void;
   onProjectDelete: (projectId: string) => void;
   onDeleteAll: () => void;
+  sortConfig: SortConfig;
+  onSort: (key: keyof Project) => void;
 }
 
-export function ProjectTable({ projects, onProjectEdit, onProjectDelete, onDeleteAll }: ProjectTableProps) {
+export function ProjectTable({ projects, onProjectEdit, onProjectDelete, onDeleteAll, sortConfig, onSort }: ProjectTableProps) {
   const ragStatusColor = {
     Green: 'bg-green-500',
     Amber: 'bg-amber-500',
     Red: 'bg-red-500',
+  };
+  
+  const SortableHeader = ({ column, label }: { column: keyof Project; label: string }) => {
+    const isSorted = sortConfig.key === column;
+    return (
+      <TableHead>
+        <Button variant="ghost" onClick={() => onSort(column)} className="-ml-4 h-8">
+          {label}
+          {isSorted ? (
+            <ArrowUpDown className={cn("ml-2 h-4 w-4", sortConfig.direction === 'descending' && 'rotate-180')} />
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4 opacity-0 group-hover:opacity-50" />
+          )}
+        </Button>
+      </TableHead>
+    );
   };
 
   return (
     <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
       <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead className="w-[200px]">Project Name</TableHead>
-            <TableHead>Epic</TableHead>
-            <TableHead>RevOps Team</TableHead>
-            <TableHead>Function</TableHead>
-            <TableHead>Progress</TableHead>
-            <TableHead>RAG</TableHead>
-            <TableHead>Assignee</TableHead>
-            <TableHead>Support</TableHead>
-            <TableHead>Dependencies</TableHead>
-            <TableHead>Start Date</TableHead>
-            <TableHead>End Date</TableHead>
+          <TableRow className="group">
+            <SortableHeader column="name" label="Project Name" />
+            <SortableHeader column="epicNumber" label="Epic" />
+            <SortableHeader column="revopsTeam" label="RevOps Team" />
+            <SortableHeader column="function" label="Function" />
+            <SortableHeader column="progress" label="Progress" />
+            <SortableHeader column="ragStatus" label="RAG" />
+            <SortableHeader column="assignee" label="Assignee" />
+            <SortableHeader column="support" label="Support" />
+            <SortableHeader column="dependencies" label="Dependencies" />
+            <SortableHeader column="startDate" label="Start Date" />
+            <SortableHeader column="endDate" label="End Date" />
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>

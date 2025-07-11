@@ -17,7 +17,7 @@ import { MultiSelectFilter } from "@/components/multi-select-filter";
 import { Separator } from "@/components/ui/separator";
 import { ResourceAllocationChart } from "@/components/resource-load-chart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ProjectTable } from "@/components/project-table";
+import { ProjectTable, type SortConfig } from "@/components/project-table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,6 +51,8 @@ export default function Home() {
   const [selectedDependencies, setSelectedDependencies] = useState<string[]>([]);
   const [selectedRagStatus, setSelectedRagStatus] = useState<string[]>([]);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'progress', direction: 'descending' });
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
@@ -118,7 +120,6 @@ export default function Home() {
   
   const filteredProjects = useMemo(() => {
     return projects.filter(project => {
-        // Year filter (AND condition)
         let isYearMatch = false;
         try {
             const startYear = getYear(parseISO(project.startDate));
@@ -127,16 +128,11 @@ export default function Home() {
                 isYearMatch = true;
             }
         } catch (e) {
-            isYearMatch = false; // Ignore projects with invalid dates for filtering
+            isYearMatch = false;
         }
 
         if (!isYearMatch) {
             return false;
-        }
-
-        // Other filters (OR condition)
-        if (!hasActiveFilters) {
-            return true; // No other filters active, so if year matches, include it
         }
 
         const teamMatch = selectedTeams.length === 0 || selectedTeams.includes(project.revopsTeam);
@@ -146,30 +142,44 @@ export default function Home() {
         const dependencyMatch = selectedDependencies.length === 0 || (project.dependencies || "").split(',').map(d => d.trim()).filter(Boolean).some(d => selectedDependencies.includes(d));
         const ragStatusMatch = selectedRagStatus.length === 0 || (project.ragStatus ? selectedRagStatus.includes(project.ragStatus) : false);
 
+        return teamMatch && functionMatch && assigneeMatch && supportMatch && dependencyMatch && ragStatusMatch;
+    });
+  }, [projects, selectedYear, selectedTeams, selectedAssignees, selectedFunctions, selectedSupport, selectedDependencies, selectedRagStatus]);
+  
+  const sortedAndFilteredProjects = useMemo(() => {
+    const sortable = [...filteredProjects];
+    if (sortConfig.key) {
+      sortable.sort((a, b) => {
+        const aValue = a[sortConfig.key];
+        const bValue = b[sortConfig.key];
 
-        const activeFilterCategories = [
-            selectedTeams.length > 0,
-            selectedFunctions.length > 0,
-            selectedAssignees.length > 0,
-            selectedSupport.length > 0,
-            selectedDependencies.length > 0,
-            selectedRagStatus.length > 0
-        ].filter(Boolean).length;
-
-        if (activeFilterCategories > 0) {
-            const matches = [];
-            if (selectedTeams.length > 0) matches.push(teamMatch);
-            if (selectedFunctions.length > 0) matches.push(functionMatch);
-            if (selectedAssignees.length > 0) matches.push(assigneeMatch);
-            if (selectedSupport.length > 0) matches.push(supportMatch);
-            if (selectedDependencies.length > 0) matches.push(dependencyMatch);
-            if (selectedRagStatus.length > 0) matches.push(ragStatusMatch);
-            return matches.some(match => match);
+        if (aValue === undefined || aValue === null || aValue === '') return 1;
+        if (bValue === undefined || bValue === null || bValue === '') return -1;
+        
+        let comparison = 0;
+        if (typeof aValue === 'number' && typeof bValue === 'number') {
+            comparison = aValue - bValue;
+        } else if (sortConfig.key === 'startDate' || sortConfig.key === 'endDate') {
+            comparison = new Date(aValue as string).getTime() - new Date(bValue as string).getTime();
+        }
+        else {
+            comparison = (aValue as string).localeCompare(bValue as string);
         }
 
-        return true;
-    });
-  }, [projects, selectedYear, selectedTeams, selectedAssignees, selectedFunctions, selectedSupport, selectedDependencies, selectedRagStatus, hasActiveFilters]);
+        return sortConfig.direction === 'ascending' ? comparison : -comparison;
+      });
+    }
+    return sortable;
+  }, [filteredProjects, sortConfig]);
+
+  const handleRequestSort = (key: keyof Project) => {
+    let direction: 'ascending' | 'descending' = 'ascending';
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+
 
   const handleProjectSave = (data: ProjectFormValues, projectId?: string) => {
     if (projectId) {
@@ -330,7 +340,6 @@ export default function Home() {
         </p>
       </header>
       
-      {/* Edit Project Dialog - controlled, no visible trigger */}
       <AddProjectDialog
           onSave={handleProjectSave}
           projectToEdit={projectToEdit}
@@ -367,7 +376,7 @@ export default function Home() {
                     ) : (
                         <Lightbulb className="mr-2 h-4 w-4" />
                     )}
-                    Optimize {filteredProjects.length > 0 && hasActiveFilters ? `${filteredProjects.length} ` : ''}with AI
+                    Optimize with AI
                     </Button>
                   </div>
                   <div className="flex-grow flex flex-col gap-2">
@@ -466,10 +475,12 @@ export default function Home() {
           </TabsContent>
           <TabsContent value="table">
             <ProjectTable 
-              projects={filteredProjects} 
+              projects={sortedAndFilteredProjects} 
               onProjectEdit={handleProjectEdit} 
               onProjectDelete={handleProjectDelete}
-              onDeleteAll={handleDeleteAllProjects} 
+              onDeleteAll={handleDeleteAllProjects}
+              sortConfig={sortConfig}
+              onSort={handleRequestSort}
             />
           </TabsContent>
         </Tabs>
